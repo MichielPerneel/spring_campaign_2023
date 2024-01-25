@@ -29,6 +29,7 @@ Detailed background and the objective of the study are provided in the manuscrip
 │   ├── cluster.yaml
 │   └── config.yaml
 ├── README.md
+├── figures
 ├── samples.csv
 ├── scripts
 │   ├── TEP_analysis.ipynb
@@ -43,10 +44,31 @@ Detailed background and the objective of the study are provided in the manuscrip
 4. Push to the branch (`git push origin feature/fooBar`)
 5. Create a new Pull Request
 
+## Create and activate the conda environment
+
+Use the environment.yml file to create a dedicated conda environment. This file includes all the necessary dependencies for this project.
+
+```bash
+conda env create -f environment.yml
+```
+
+Once the environment is created, you can activate it using:
+
+```bash
+conda activate spring_campaign_2023
+```
+
+If you need to updates to the environment, you can update the environment.yml file and run the following command:
+
+```bash
+conda env update -f environment.yml  --prune
+```
+
+## Analyses
+TEP analysis is done [here](scripts/TEP_analysis.ipynb).
+Flowcam data analysis is done [here](scripts/flowcam.ipynb).
+
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
 ## Acknowledgments
-
-* Include acknowledgments, references, and other necessary information here.
