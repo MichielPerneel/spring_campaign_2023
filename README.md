@@ -49,7 +49,7 @@ Detailed background and the objective of the study are provided in the manuscrip
 Use the environment.yml file to create a dedicated conda environment. This file includes all the necessary dependencies for this project.
 
 ```bash
-conda env create -f environment.yml
+conda env create -f environment.yaml
 ```
 
 Once the environment is created, you can activate it using:
@@ -61,7 +61,7 @@ conda activate spring_campaign_2023
 If you need to updates to the environment, you can update the environment.yml file and run the following command:
 
 ```bash
-conda env update -f environment.yml  --prune
+conda env update -f environment.yaml  --prune
 ```
 
 ## Analyses
