@@ -24,14 +24,14 @@ genus <- "Phaeocystis"
 # Read in normalized, gene-annotated (modules or KOs) transcript counts
 samples_genes_matrix <- read.csv(
   paste0(
-    "../../data/annotation/taxonomy_eukprot/genus_bins/",
+    "data/annotation/taxonomy_eukprot/130/genus_bins/",
     genus, "_transcript_expression_sum.csv"),
     check.names = FALSE
 )
 
 # Make directories for the results
-dir.create(paste0("../../figures/WGCNA/transcripts/", genus), recursive = TRUE)
-dir.create(paste0("../../data/analysis/WGCNA/transcripts/", genus), recursive = TRUE)
+dir.create(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus), recursive = TRUE)
+dir.create(paste0("data/analysis/WGCNA_130/transcripts/", genus), recursive = TRUE)
 
 # Set row names and column names
 rownames(samples_genes_matrix) <- samples_genes_matrix[, 1]
@@ -57,29 +57,24 @@ datExpr <- datExpr[, !constant_genes]
 gsg <- goodSamplesGenes(datExpr, verbose = 3)
 cat("All genes OK after filtering constant genes:", gsg$allOK, "\n")
 
+# Pick a random subset of genes for development purposes
+#datExpr <- datExpr[, sample(ncol(datExpr), 5000)]
+
 # log2 transform, add pseudocount
 datExpr <- log2(datExpr + 1)
 cat("Dimensions of datExpr matrix after log2 transformation:", dim(datExpr), "\n")
 
 # Read in environmental data
-data_env <- read.csv("../../data/samples_env.csv", stringsAsFactors = FALSE, sep = ",", header = TRUE, row.names = 1)
+data_env <- read.csv("data/samples_env.csv", stringsAsFactors = FALSE, sep = ",", header = TRUE, row.names = 2)
 
 # Remove uninteresting columns
 columns_to_remove <- c(
-  "SW.filtered..L.", "Eluate.volume..mL.", "RNA.extraction.vol",
-  "Date", "Code", "bathymetry", "surface_baroclinic_sea_water_velocity",
-  "CTD...Conductivity", "CTD...CPAR", "CTD...Density", "CTD...Fluorescence",
-  "CTD...OBS", "CTD...PAR", "CTD...ph", "CTD...Pressure",
-  "CTD...Sound.Velocity", "CTD...SPAR", "Nutrients...Nitrate_Nitrite"
-)
+  'StationPrefix', 'StationSuffix', 'Latitude', 'Longitude', 'NOX',
+  'Conductivity', 'Depth', 'X',
+  'sea_surface_height_above_sea_level', 'surface_baroclinic_sea_water_velocity'
+  )
 
 data_env <- data_env[, !names(data_env) %in% columns_to_remove]
-
-# Rename remaining columns
-colnames(data_env) <- c(
-  "date", "time", "station", "salinity", "temperature",
-  "NO4", "NO3", "NO2", "PO4", "Si", "SPM", "day_length"
-)
 
 # Only keep the rows that are present in both datasets
 data_env <- data_env[rownames(datExpr), ]
@@ -91,13 +86,13 @@ datExpr <- datExpr[rownames(data_env), ]
 stopifnot(all(rownames(data_env) == rownames(datExpr)))
 
 # Get the metadata from env_data
-metadata <- data_env[, c("date", "station")]
+metadata <- data_env[, c("Date", "day_moment")]
 
 # Get the environmental parameters from env_data
 env_params <- data_env[, c(
-  "salinity", "temperature",
-  "NO4", "NO3", "NO2", "PO4", "Si",
-  "SPM", "day_length"
+  "day_length", "Temperature", "Salinity",
+  "Oxygen", "Fluorescence", "NH4", "NO2", "NO3",
+  "PO4", "Si", "TEP_concentration_avg"
 )]
 
 #------------- 1. Dendrogram and trait heatmap showing outliers ------------#
@@ -113,7 +108,7 @@ dimnames(traitColors)[[2]] <- paste(names(env_params))
 datColors <- data.frame(outlierC = outlierColor, traitColors)
 
 cat("Plotting sample dendrogram and trait heatmap...\n")
-svg(paste0("../../figures/WGCNA/transcripts/", genus, "/sample_dendrogram_and_trait_heatmap.svg"))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/sample_dendrogram_and_trait_heatmap.svg"))
 plotDendroAndColors(sampleTree,
                     groupLabels = names(datColors),
                     colors = datColors,
@@ -146,7 +141,7 @@ plot1 <- ggplot(sft_data, aes(x = Power, y = ScaledR2, label = Labels)) +
   geom_hline(yintercept = c(0.80, 0.90), colour = "red", linetype = "dashed") +
   labs(x = "Soft Threshold (power)", y = "Scale Free Topology Model Fit, signed R^2", title = "Scale independence") +
   theme_minimal()
-ggsave(paste0("../../figures/WGCNA/transcripts/", genus, "/scale_independence.svg"), plot = plot1, width = 10, height = 5, dpi = 600)
+ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/scale_independence.svg"), plot = plot1, width = 10, height = 5, dpi = 600)
 
 # Plot 2: Mean connectivity
 cat("Plotting Mean connectivity...\n")
@@ -155,7 +150,7 @@ plot2 <- ggplot(sft_data, aes(x = Power, y = MeanConnectivity, label = Labels)) 
   geom_text(colour = "grey", nudge_y = 0.10) +
   labs(x = "Soft Threshold (power)", y = "Mean Connectivity", title = "Mean connectivity") +
   theme_minimal()
-ggsave(paste0("../../figures/WGCNA/transcripts/", genus, "/mean_connectivity.svg"), plot = plot2, width = 10, height = 5, dpi = 600)
+ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/mean_connectivity.svg"), plot = plot2, width = 10, height = 5, dpi = 600)
 
 # Choose soft thresholding power based on the plot above
 softPower <- sft$powerEstimate
@@ -175,7 +170,7 @@ dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM, deepSplit = 4, 
 dynamicColors <- labels2colors(dynamicMods)
 
 cat("Plotting Gene dendrogram and module colors...\n")
-svg(paste0("../../figures/WGCNA/transcripts/", genus, "/gene_dendrogram_and_module_colors.svg"))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/gene_dendrogram_and_module_colors.svg"))
 plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut", dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05, main = "Gene dendrogram and module colors")
 dev.off()
 
@@ -186,7 +181,7 @@ MEDiss <- 1 - cor(MEs)
 METree <- flashClust(as.dist(MEDiss), method = "average")
 
 cat("Plotting Clustering of module eigengenes...\n")
-svg(paste0("../../figures/WGCNA/transcripts/", genus, "/clustering_of_module_eigengenes.svg"))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/clustering_of_module_eigengenes.svg"))
 plot(METree, main = "Clustering of module eigengenes", xlab = "", sub = "")
 abline(h = 0.2, col = "red")
 dev.off()
@@ -196,7 +191,7 @@ mergedColors <- merge$colors
 mergedMEs <- merge$newMEs
 
 cat("Plotting Merged dynamic colors...\n")
-svg(paste0("../../figures/WGCNA/transcripts/", genus, "/merged_dynamic_colors.svg"))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/merged_dynamic_colors.svg"))
 plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors), c("Dynamic Tree Cut", "Merged dynamic"), dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
 dev.off()
 
@@ -226,8 +221,8 @@ cat("Creating Module-trait relationships heatmap...\n")
 textMatrix <- paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 1), ")", sep = "")
 dim(textMatrix) <- dim(moduleTraitCor)
 
-svg(paste0("../../figures/WGCNA/transcripts/", genus, "/module_trait_relationships.svg"))
-par(mar = c(6, 8.5, 3, 3))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/module_trait_relationships.svg"), width = 10, height = 10)
+par(mar = c(8, 12.5, 3, 3))
 labeledHeatmap(Matrix = moduleTraitCor,
                xLabels = names(env_params),
                yLabels = names(MEs),
@@ -236,39 +231,38 @@ labeledHeatmap(Matrix = moduleTraitCor,
                colors = blueWhiteRed(50),
                textMatrix = textMatrix,
                setStdMargins = FALSE,
-               cex.text = 0.8,
+               cex.text = 0.6,
                zlim = c(-1, 1),
                main = "Module-trait relationships")
 dev.off()
 
 # Save the module eigengene expression data as csv
-write.csv(MEs, file = paste0("../../data/analysis/WGCNA/transcripts/", genus, "/module_eigengenes.csv"), row.names = TRUE)
+write.csv(MEs, file = paste0("data/analysis/WGCNA_130/transcripts/", genus, "/module_eigengenes.csv"), row.names = TRUE)
 
-# Plot the expression of the eigengene of each module at a given month and station
+# Plot the expression of the eigengene of each module at every hour
 cat("Plotting module eigengene expression per month and station...\n")
 MElong <- MEs %>% as.data.frame() %>% rownames_to_column("sample")
-MElong <- melt(MElong, id_vars = "sample", variable.name = "module", value.name = "ME_expression")
+MElong <- melt(MElong, id.vars = "sample", variable.name = "module", value.name = "ME_expression")
 metadata2 <- metadata %>% rownames_to_column("sample")
 MElong <- MElong %>% left_join(metadata2, by = "sample")
-MElong$date <- as.Date(MElong$date)
-MElong$year_month <- format(MElong$date, "%Y-%m")
+MElong$Date <- ymd_hms(MElong$Date)  # Parse both date and time
+MElong$hour <- round_date(MElong$Date, "hour")
+MElong$hour <- as.factor(format(MElong$hour, "%Y-%m-%d %H:%M:%S"))
 
-date_range <- seq(from = ymd("2020-07-01"), to = ymd("2023-08-31"), by = "1 month")
-date_labels <- format(date_range, "%Y-%m")
-MElong <- MElong %>% complete(station, module, year_month = date_labels) %>% arrange(station, module, year_month)
-MElong$station <- factor(MElong$station, levels = c("ZG02", "330", "700"))
+date_range <- seq(from = ymd_hms("2023-04-20 09:00:00"), to = ymd_hms("2023-04-21 10:00:00"), by = "1 hour")
+date_labels <- format(date_range, "%Y-%m-%d %H:%M:%S")
+MElong <- MElong %>% complete(module, hour = date_labels) %>% arrange(module, hour)
 
-p <- ggplot(MElong, aes(x = year_month, y = module, fill = ME_expression)) +
+p <- ggplot(MElong, aes(x = hour, y = module, fill = ME_expression)) +
   geom_tile() +
-  facet_wrap(~ station, scales = "free_x") +
   scale_fill_distiller(palette = "Spectral", na.value = "white") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "bottom") +
-  labs(x = "Year_Month", y = "Module", fill = "Module Eigengene Expression") +
+  labs(x = "Hour", y = "Module", fill = "Module Eigengene Expression") +
   scale_x_discrete(limits = date_labels) +
-  guides(fill = guide_colorbar(barwidth = 10, barheight = 1, title.position = "top", title.hjust = 0.5), colour = guide_legend(direction = "vertical", nrow = 1, byrow = TRUE), position = "bottom")
+  guides(fill = guide_colorbar(barwidth = 10, barheight = 1, title.position = "top", title.hjust = 0.5))
 
-ggsave(paste0("../../figures/WGCNA/transcripts/", genus, "/module_eigengene_expression_per_month_station.svg"), plot = p, width = 18, height = 6)
+ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/module_eigengene_expression_per_hour.svg"), plot = p, width = 18, height = 6)
 
 #----------------------- 4. Module content ----------------------#
 cat("Finding important genes in each module...\n")
@@ -282,8 +276,8 @@ for (module in names(MEs)) {
   module_cor <- module_cor[order(-module_cor[, 1]), , drop = FALSE]
   module_cor <- module_cor %>% as.data.frame() %>% rownames_to_column("transcript_id")
   cat("Number of transcripts in module", module, ":", nrow(module_cor), "\n")
-  write.table(module_cor, file = paste0("../../data/analysis/WGCNA/transcripts/", genus, "/", module, "_content.txt"), sep = "\t", quote = FALSE, row.names = FALSE)
+  write.table(module_cor, file = paste0("data/analysis/WGCNA_130/transcripts/", genus, "/", module, "_content.txt"), sep = "\t", quote = FALSE, row.names = FALSE)
 }
 
 cat("Saving all transcript IDs...\n")
-write.table(rownames(Transcript_ModuleMembership), file = paste0("../../data/analysis/WGCNA/transcripts/", genus, "/transcript_id_list.txt"), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(rownames(Transcript_ModuleMembership), file = paste0("data/analysis/WGCNA_130/transcripts/", genus, "/transcript_id_list.txt"), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
