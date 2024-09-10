@@ -6,7 +6,7 @@
   <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
    <cc:Work>
     <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
-    <dc:date>2024-01-25T10:35:39.405083</dc:date>
+    <dc:date>2024-09-02T10:51:27.238048</dc:date>
     <dc:format>image/svg+xml</dc:format>
     <dc:creator>
      <cc:Agent>
@@ -40,188 +40,180 @@ z
    <g id="patch_3">
     <path d="M 109.6625 377.64 
 L 136.233929 377.64 
-L 136.233929 364.070769 
-L 109.6625 364.070769 
+L 136.233929 363.385455 
+L 109.6625 363.385455 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #e69f00"/>
+" clip-path="url(#pe90c789612)" style="fill: #e69f00"/>
    </g>
    <g id="patch_4">
-    <path d="M 109.6625 360.678462 
-L 136.233929 360.678462 
-L 136.233929 347.109231 
-L 109.6625 347.109231 
+    <path d="M 109.6625 359.821818 
+L 136.233929 359.821818 
+L 136.233929 345.567273 
+L 109.6625 345.567273 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #56b4e9"/>
+" clip-path="url(#pe90c789612)" style="fill: #56b4e9"/>
    </g>
    <g id="patch_5">
-    <path d="M 109.6625 343.716923 
-L 136.233929 343.716923 
-L 136.233929 330.147692 
-L 109.6625 330.147692 
+    <path d="M 109.6625 342.003636 
+L 136.233929 342.003636 
+L 136.233929 327.749091 
+L 109.6625 327.749091 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #009e73"/>
+" clip-path="url(#pe90c789612)" style="fill: #009e73"/>
    </g>
    <g id="patch_6">
-    <path d="M 109.6625 326.755385 
-L 136.233929 326.755385 
-L 136.233929 313.186154 
-L 109.6625 313.186154 
+    <path d="M 109.6625 324.185455 
+L 136.233929 324.185455 
+L 136.233929 309.930909 
+L 109.6625 309.930909 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #0072b2"/>
+" clip-path="url(#pe90c789612)" style="fill: #0072b2"/>
    </g>
    <g id="patch_7">
-    <path d="M 109.6625 309.793846 
-L 136.233929 309.793846 
-L 136.233929 296.224615 
-L 109.6625 296.224615 
+    <path d="M 109.6625 306.367273 
+L 136.233929 306.367273 
+L 136.233929 292.112727 
+L 109.6625 292.112727 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #19d3f3"/>
+" clip-path="url(#pe90c789612)" style="fill: #19d3f3"/>
    </g>
    <g id="patch_8">
-    <path d="M 109.6625 292.832308 
-L 136.233929 292.832308 
-L 136.233929 279.263077 
-L 109.6625 279.263077 
+    <path d="M 109.6625 288.549091 
+L 136.233929 288.549091 
+L 136.233929 274.294545 
+L 109.6625 274.294545 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #ff6692"/>
+" clip-path="url(#pe90c789612)" style="fill: #ff6692"/>
    </g>
    <g id="patch_9">
-    <path d="M 109.6625 275.870769 
-L 136.233929 275.870769 
-L 136.233929 262.301538 
-L 109.6625 262.301538 
+    <path d="M 109.6625 270.730909 
+L 136.233929 270.730909 
+L 136.233929 256.476364 
+L 109.6625 256.476364 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #f0e442"/>
+" clip-path="url(#pe90c789612)" style="fill: #f0e442"/>
    </g>
    <g id="patch_10">
-    <path d="M 109.6625 258.909231 
-L 136.233929 258.909231 
-L 136.233929 245.34 
-L 109.6625 245.34 
+    <path d="M 109.6625 252.912727 
+L 136.233929 252.912727 
+L 136.233929 238.658182 
+L 109.6625 238.658182 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #808080"/>
+" clip-path="url(#pe90c789612)" style="fill: #b6e880"/>
    </g>
    <g id="patch_11">
-    <path d="M 109.6625 241.947692 
-L 136.233929 241.947692 
-L 136.233929 228.378462 
-L 109.6625 228.378462 
+    <path d="M 109.6625 235.094545 
+L 136.233929 235.094545 
+L 136.233929 220.84 
+L 109.6625 220.84 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #b6e880"/>
+" clip-path="url(#pe90c789612)" style="fill: #89ce00"/>
    </g>
    <g id="patch_12">
-    <path d="M 109.6625 224.986154 
-L 136.233929 224.986154 
-L 136.233929 211.416923 
-L 109.6625 211.416923 
+    <path d="M 109.6625 217.276364 
+L 136.233929 217.276364 
+L 136.233929 203.021818 
+L 109.6625 203.021818 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #89ce00"/>
+" clip-path="url(#pe90c789612)" style="fill: #ff97ff"/>
    </g>
    <g id="patch_13">
-    <path d="M 109.6625 208.024615 
-L 136.233929 208.024615 
-L 136.233929 194.455385 
-L 109.6625 194.455385 
+    <path d="M 109.6625 199.458182 
+L 136.233929 199.458182 
+L 136.233929 185.203636 
+L 109.6625 185.203636 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #ff97ff"/>
+" clip-path="url(#pe90c789612)" style="fill: #fecb52"/>
    </g>
    <g id="patch_14">
-    <path d="M 109.6625 191.063077 
-L 136.233929 191.063077 
-L 136.233929 177.493846 
-L 109.6625 177.493846 
+    <path d="M 109.6625 181.64 
+L 136.233929 181.64 
+L 136.233929 167.385455 
+L 109.6625 167.385455 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #fecb52"/>
+" clip-path="url(#pe90c789612)" style="fill: #636efa"/>
    </g>
    <g id="patch_15">
-    <path d="M 109.6625 174.101538 
-L 136.233929 174.101538 
-L 136.233929 160.532308 
-L 109.6625 160.532308 
+    <path d="M 109.6625 163.821818 
+L 136.233929 163.821818 
+L 136.233929 149.567273 
+L 109.6625 149.567273 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #636efa"/>
+" clip-path="url(#pe90c789612)" style="fill: #ef553b"/>
    </g>
    <g id="patch_16">
-    <path d="M 109.6625 157.14 
-L 136.233929 157.14 
-L 136.233929 143.570769 
-L 109.6625 143.570769 
+    <path d="M 109.6625 146.003636 
+L 136.233929 146.003636 
+L 136.233929 131.749091 
+L 109.6625 131.749091 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #ef553b"/>
+" clip-path="url(#pe90c789612)" style="fill: #00cc96"/>
    </g>
    <g id="patch_17">
-    <path d="M 109.6625 140.178462 
-L 136.233929 140.178462 
-L 136.233929 126.609231 
-L 109.6625 126.609231 
+    <path d="M 109.6625 128.185455 
+L 136.233929 128.185455 
+L 136.233929 113.930909 
+L 109.6625 113.930909 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #00cc96"/>
+" clip-path="url(#pe90c789612)" style="fill: #ab63fa"/>
    </g>
    <g id="patch_18">
-    <path d="M 109.6625 123.216923 
-L 136.233929 123.216923 
-L 136.233929 109.647692 
-L 109.6625 109.647692 
+    <path d="M 109.6625 110.367273 
+L 136.233929 110.367273 
+L 136.233929 96.112727 
+L 109.6625 96.112727 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #ab63fa"/>
+" clip-path="url(#pe90c789612)" style="fill: #d55e00"/>
    </g>
    <g id="patch_19">
-    <path d="M 109.6625 106.255385 
-L 136.233929 106.255385 
-L 136.233929 92.686154 
-L 109.6625 92.686154 
+    <path d="M 109.6625 92.549091 
+L 136.233929 92.549091 
+L 136.233929 78.294545 
+L 109.6625 78.294545 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #d55e00"/>
+" clip-path="url(#pe90c789612)" style="fill: #ead506"/>
    </g>
    <g id="patch_20">
-    <path d="M 109.6625 89.293846 
-L 136.233929 89.293846 
-L 136.233929 75.724615 
-L 109.6625 75.724615 
+    <path d="M 109.6625 74.730909 
+L 136.233929 74.730909 
+L 136.233929 60.476364 
+L 109.6625 60.476364 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #ead506"/>
+" clip-path="url(#pe90c789612)" style="fill: #a42324"/>
    </g>
    <g id="patch_21">
-    <path d="M 109.6625 72.332308 
-L 136.233929 72.332308 
-L 136.233929 58.763077 
-L 109.6625 58.763077 
+    <path d="M 109.6625 56.912727 
+L 136.233929 56.912727 
+L 136.233929 42.658182 
+L 109.6625 42.658182 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #a42324"/>
+" clip-path="url(#pe90c789612)" style="fill: #55eeff"/>
    </g>
    <g id="patch_22">
-    <path d="M 109.6625 55.370769 
-L 136.233929 55.370769 
-L 136.233929 41.801538 
-L 109.6625 41.801538 
-z
-" clip-path="url(#p293b0dd625)" style="fill: #55eeff"/>
-   </g>
-   <g id="patch_23">
-    <path d="M 109.6625 38.409231 
-L 136.233929 38.409231 
+    <path d="M 109.6625 39.094545 
+L 136.233929 39.094545 
 L 136.233929 24.84 
 L 109.6625 24.84 
 z
-" clip-path="url(#p293b0dd625)" style="fill: #06ea0d"/>
+" clip-path="url(#pe90c789612)" style="fill: #06ea0d"/>
    </g>
    <g id="matplotlib.axis_1">
     <g id="xtick_1">
      <g id="line2d_1">
       <defs>
-       <path id="ma1f05191c6" d="M 0 0 
+       <path id="m944709a5d2" d="M 0 0 
 L 0 3.5 
 " style="stroke: #000000; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#ma1f05191c6" x="109.6625" y="395.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m944709a5d2" x="109.6625" y="395.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
     </g>
     <g id="xtick_2">
      <g id="line2d_2">
       <g>
-       <use xlink:href="#ma1f05191c6" x="136.233929" y="395.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m944709a5d2" x="136.233929" y="395.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
     </g>
@@ -231,7 +223,7 @@ L 0 3.5
      <g id="line2d_3"/>
      <g id="text_1">
       <!-- Bacillariophyta -->
-      <g transform="translate(32.18625 375.021635) scale(0.12 -0.12)">
+      <g transform="translate(32.18625 374.678977) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-42" d="M 2956 2163 
 Q 3397 2069 3616 1863 
@@ -627,7 +619,7 @@ z
      <g id="line2d_4"/>
      <g id="text_2">
       <!-- Dinophyceae -->
-      <g transform="translate(42.855 358.060096) scale(0.12 -0.12)">
+      <g transform="translate(42.855 356.860795) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-44" d="M 109 0 
 L 109 116 
@@ -742,7 +734,7 @@ z
      <g id="line2d_5"/>
      <g id="text_3">
       <!-- Prymnesiophyceae -->
-      <g transform="translate(15.52125 341.098558) scale(0.12 -0.12)">
+      <g transform="translate(15.52125 339.042614) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-50" d="M 1313 1984 
 L 1313 750 
@@ -906,7 +898,7 @@ z
      <g id="line2d_6"/>
      <g id="text_4">
       <!-- Arthropoda -->
-      <g transform="translate(50.844375 324.137019) scale(0.12 -0.12)">
+      <g transform="translate(50.844375 321.224432) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-41" d="M 2928 1419 
 L 1288 1419 
@@ -994,7 +986,7 @@ z
      <g id="line2d_7"/>
      <g id="text_5">
       <!-- Bellerochea -->
-      <g transform="translate(48.860625 307.175481) scale(0.12 -0.12)">
+      <g transform="translate(48.860625 303.40625) scale(0.12 -0.12)">
        <use xlink:href="#TimesNewRomanPSMT-42"/>
        <use xlink:href="#TimesNewRomanPSMT-65" x="66.699219"/>
        <use xlink:href="#TimesNewRomanPSMT-6c" x="111.083984"/>
@@ -1013,7 +1005,7 @@ z
      <g id="line2d_8"/>
      <g id="text_6">
       <!-- Cerataulina pelagica -->
-      <g transform="translate(7.87875 290.213942) scale(0.12 -0.12)">
+      <g transform="translate(7.87875 285.588068) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-43" d="M 3853 4334 
 L 3950 2894 
@@ -1165,7 +1157,7 @@ z
      <g id="line2d_9"/>
      <g id="text_7">
       <!-- Ciliates -->
-      <g transform="translate(69.49875 273.252404) scale(0.12 -0.12)">
+      <g transform="translate(69.49875 267.769886) scale(0.12 -0.12)">
        <use xlink:href="#TimesNewRomanPSMT-43"/>
        <use xlink:href="#TimesNewRomanPSMT-69" x="66.699219"/>
        <use xlink:href="#TimesNewRomanPSMT-6c" x="94.482422"/>
@@ -1180,24 +1172,8 @@ z
     <g id="ytick_8">
      <g id="line2d_10"/>
      <g id="text_8">
-      <!-- Detritus -->
-      <g transform="translate(67.501875 256.290865) scale(0.12 -0.12)">
-       <use xlink:href="#TimesNewRomanPSMT-44"/>
-       <use xlink:href="#TimesNewRomanPSMT-65" x="72.216797"/>
-       <use xlink:href="#TimesNewRomanPSMT-74" x="116.601562"/>
-       <use xlink:href="#TimesNewRomanPSMT-72" x="144.384766"/>
-       <use xlink:href="#TimesNewRomanPSMT-69" x="177.685547"/>
-       <use xlink:href="#TimesNewRomanPSMT-74" x="205.46875"/>
-       <use xlink:href="#TimesNewRomanPSMT-75" x="233.251953"/>
-       <use xlink:href="#TimesNewRomanPSMT-73" x="283.251953"/>
-      </g>
-     </g>
-    </g>
-    <g id="ytick_9">
-     <g id="line2d_11"/>
-     <g id="text_9">
       <!-- Flock -->
-      <g transform="translate(78.82875 239.329327) scale(0.12 -0.12)">
+      <g transform="translate(78.82875 249.951705) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-46" d="M 1309 4006 
 L 1309 2341 
@@ -1290,11 +1266,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_10">
-     <g id="line2d_12"/>
-     <g id="text_10">
+    <g id="ytick_9">
+     <g id="line2d_11"/>
+     <g id="text_9">
       <!-- Mollusca -->
-      <g transform="translate(61.5 222.367788) scale(0.12 -0.12)">
+      <g transform="translate(61.5 232.133523) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-4d" d="M 2619 0 
 L 981 3566 
@@ -1348,11 +1324,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_11">
-     <g id="line2d_13"/>
-     <g id="text_11">
+    <g id="ytick_10">
+     <g id="line2d_12"/>
+     <g id="text_10">
       <!-- Sediment -->
-      <g transform="translate(60.834375 205.40625) scale(0.12 -0.12)">
+      <g transform="translate(60.834375 214.315341) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-53" d="M 2934 4334 
 L 2934 2869 
@@ -1409,11 +1385,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_12">
-     <g id="line2d_14"/>
-     <g id="text_12">
+    <g id="ytick_11">
+     <g id="line2d_13"/>
+     <g id="text_11">
       <!-- Unknown_6 -->
-      <g transform="translate(46.83 188.444712) scale(0.12 -0.12)">
+      <g transform="translate(46.83 196.497159) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-55" d="M 3053 4122 
 L 3053 4238 
@@ -1542,11 +1518,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_13">
-     <g id="line2d_15"/>
-     <g id="text_13">
+    <g id="ytick_12">
+     <g id="line2d_14"/>
+     <g id="text_12">
       <!-- Cerataulus granulata -->
-      <g transform="translate(7.2 171.483173) scale(0.12 -0.12)">
+      <g transform="translate(7.2 178.678977) scale(0.12 -0.12)">
        <use xlink:href="#TimesNewRomanPSMT-43"/>
        <use xlink:href="#TimesNewRomanPSMT-65" x="66.699219"/>
        <use xlink:href="#TimesNewRomanPSMT-72" x="111.083984"/>
@@ -1570,11 +1546,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_14">
-     <g id="line2d_16"/>
-     <g id="text_14">
+    <g id="ytick_13">
+     <g id="line2d_15"/>
+     <g id="text_13">
       <!-- Porifera spicule -->
-      <g transform="translate(30.523125 154.521635) scale(0.12 -0.12)">
+      <g transform="translate(30.523125 160.860795) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-66" d="M 1319 2638 
 L 1319 756 
@@ -1633,11 +1609,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_15">
-     <g id="line2d_17"/>
-     <g id="text_15">
+    <g id="ytick_14">
+     <g id="line2d_16"/>
+     <g id="text_14">
       <!-- Radiozoa incertae -->
-      <g transform="translate(19.873125 137.560096) scale(0.12 -0.12)">
+      <g transform="translate(19.873125 143.042614) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-52" d="M 4325 0 
 L 3194 0 
@@ -1724,11 +1700,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_16">
-     <g id="line2d_18"/>
-     <g id="text_16">
+    <g id="ytick_15">
+     <g id="line2d_17"/>
+     <g id="text_15">
       <!-- Appendicularia -->
-      <g transform="translate(32.191875 120.598558) scale(0.12 -0.12)">
+      <g transform="translate(32.191875 125.224432) scale(0.12 -0.12)">
        <use xlink:href="#TimesNewRomanPSMT-41"/>
        <use xlink:href="#TimesNewRomanPSMT-70" x="72.216797"/>
        <use xlink:href="#TimesNewRomanPSMT-70" x="122.216797"/>
@@ -1746,11 +1722,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_17">
-     <g id="line2d_19"/>
-     <g id="text_17">
+    <g id="ytick_16">
+     <g id="line2d_18"/>
+     <g id="text_16">
       <!-- Annelida -->
-      <g transform="translate(62.175 103.637019) scale(0.12 -0.12)">
+      <g transform="translate(62.175 107.40625) scale(0.12 -0.12)">
        <use xlink:href="#TimesNewRomanPSMT-41"/>
        <use xlink:href="#TimesNewRomanPSMT-6e" x="72.216797"/>
        <use xlink:href="#TimesNewRomanPSMT-6e" x="122.216797"/>
@@ -1762,11 +1738,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_18">
-     <g id="line2d_20"/>
-     <g id="text_18">
+    <g id="ytick_17">
+     <g id="line2d_19"/>
+     <g id="text_17">
       <!-- Rotifera -->
-      <g transform="translate(66.845625 86.675481) scale(0.12 -0.12)">
+      <g transform="translate(66.845625 89.588068) scale(0.12 -0.12)">
        <use xlink:href="#TimesNewRomanPSMT-52"/>
        <use xlink:href="#TimesNewRomanPSMT-6f" x="66.699219"/>
        <use xlink:href="#TimesNewRomanPSMT-74" x="116.699219"/>
@@ -1778,11 +1754,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_19">
-     <g id="line2d_21"/>
-     <g id="text_19">
+    <g id="ytick_18">
+     <g id="line2d_20"/>
+     <g id="text_18">
       <!-- Cnidaria -->
-      <g transform="translate(64.84125 69.713942) scale(0.12 -0.12)">
+      <g transform="translate(64.84125 71.769886) scale(0.12 -0.12)">
        <use xlink:href="#TimesNewRomanPSMT-43"/>
        <use xlink:href="#TimesNewRomanPSMT-6e" x="66.699219"/>
        <use xlink:href="#TimesNewRomanPSMT-69" x="116.699219"/>
@@ -1794,11 +1770,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_20">
-     <g id="line2d_22"/>
-     <g id="text_20">
+    <g id="ytick_19">
+     <g id="line2d_21"/>
+     <g id="text_19">
       <!-- Echinodermata -->
-      <g transform="translate(33.52875 52.752404) scale(0.12 -0.12)">
+      <g transform="translate(33.52875 53.951705) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-45" d="M 1338 4006 
 L 1338 2331 
@@ -1859,11 +1835,11 @@ z
       </g>
      </g>
     </g>
-    <g id="ytick_21">
-     <g id="line2d_23"/>
-     <g id="text_21">
+    <g id="ytick_20">
+     <g id="line2d_22"/>
+     <g id="text_20">
       <!-- Nassellaria -->
-      <g transform="translate(52.850625 35.790865) scale(0.12 -0.12)">
+      <g transform="translate(52.850625 36.133523) scale(0.12 -0.12)">
        <defs>
         <path id="TimesNewRomanPSMT-4e" d="M -84 4238 
 L 1066 4238 
@@ -1917,7 +1893,7 @@ z
   </g>
  </g>
  <defs>
-  <clipPath id="p293b0dd625">
+  <clipPath id="pe90c789612">
    <rect x="109.6625" y="7.2" width="27.9" height="388.08"/>
   </clipPath>
  </defs>

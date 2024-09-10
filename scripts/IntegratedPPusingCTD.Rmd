@@ -1,0 +1,409 @@
+---
+title: "Estimating integrated production by merging FRRF or Labstaf data with CTD data"
+author: "Karline Soetaert"
+date: "20-December-2023"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: 
+abstract: 
+keywords:
+  photosynthesis, chlorophyll, PI curve, CTD, "R"
+---
+
+```{r setup, include=FALSE}
+options(width = 120)
+require(dtBioG)
+```
+
+The procedure for estimating depth integrated photosynthesis is exemplified based on two sets of data from the same station, obtained at 1, 7, and 40 m depth. Measurements were done with the FRRF and Labstaf. 
+
+Apart from these data, we also require a depth profile of Chlorophyll and a timeseries with photosynthetically active radiation (light intensity) data.
+
+The extinction coefficient of light with water depth is also necessary.
+
+# Chlorophyll and light data
+
+The chlorophyll data, measured with CTD will be used to estimate depth-dependent PI parameters. 
+
+PAR data have been estimated from shipboard data; they are expressed in uEinst/m2/s, same units as the light from the PI curves.
+
+```{r, fig.width=8, fig.cap="Accessory data needed to estimate depth-integrated PP"}
+CTDchl <- read.csv(file="../raw_data/CTDchl.csv")
+head(CTDchl)
+
+par <- read.csv(file= "../raw_data/Light.csv")
+par$time <- as.POSIXct(par$time)
+par (mfrow=c(1,2), las=1)
+
+with (CTDchl, 
+      plot(Chl, depth, 
+           type="l", ylim=c(100,0), 
+           ylab="water depth, m", xlab="ug/L", main = "Chl profile"))
+with (par, 
+      plot(time, par,
+           type= "l", 
+           ylab="uEinst/m2/s", main="Light intensity"))
+
+```
+
+
+## Reading FRRF data
+
+The PI curves from the FRRF (2 replicates) are read first. 
+
+We need the background fluorescence of the water to standardize the FRRF data. These data are inputted in an attribute data.frame first.
+
+```{r}
+dir   <- "../raw_data/FRRF/"
+files <- list.files(dir)
+
+FRRF.att <- data.frame(
+  file = c(
+    "A_1m_rep1.csv",  "A_1m_rep2.csv", 
+    "A_7m_rep1.csv",  "A_7m_rep2.csv",
+    "A_40m_rep1.csv", "A_40m_rep2.csv"
+    ),
+  depth     = c(1,         1,     7,     7,    40,    40), 
+  replicate = c(1,         2,     1,     2,     1,     2),
+  Fblanc    = c(0.194, 0.194, 0.175, 0.175, 0.156, 0.156)
+)
+```
+
+All the FRRF files are read and pasted in one data.frame. 
+
+The depth, replicate and blanc fluorescence are added to this data.frame.
+
+```{r}
+FRRF <- NULL
+
+for (fn in 1:nrow(FRRF.att))
+  FRRF <- rbind(FRRF, 
+            data.frame(
+              depth     = FRRF.att$depth    [fn],
+              replicate = FRRF.att$replicate[fn],
+              Fblanc    = FRRF.att$Fblanc   [fn],
+              readFRRF(dir  = dir, 
+                       file = FRRF.att$file [fn])
+                      )
+                )
+head(FRRF, n=2)
+```
+
+## Standardizing the FRRF data
+
+To standardize the FRRF data, the blanc values, *Fblanc* need to be passed. Also the cross-sectional surface of the PSII system in the dark (*aLHII_0*) is needed. In case this is not passed as an argument, it is estimated by regressing a_LHII versus irradiance (E) for low values of E (< 100), and taken as the offset. 
+
+We first standaridize all replicates at once, so that we estimate ONE value for a_LHII_0. 
+We then check whether one value is realistic, by plotting aLH_II versus E.
+
+```{r}
+FRRF_std_a <- standardizeFRRF(frrf       = FRRF, 
+                              Fblanc     = FRRF$Fblanc, 
+                              convJVPII = 3.6)  # converts to mmol e-/m3/hour
+
+# Show the attributes
+attributes(FRRF_std_a)$unit_JVPII
+(aLHII_0 <- attributes(FRRF_std_a)$aLHII_0)
+attributes(FRRF_std_a)$ka
+head(attributes(FRRF_std_a)$processing)
+
+with(FRRF_std_a, 
+     plot(E, a_LHII, 
+          col=depth, pch=18))
+abline(h=aLHII_0 )
+```
+
+Based on the difference in the a_LHII versus E regression for the different water depths, a better option is to standardize each dataset separately (but combine the two replicates). 
+This way, a different value of a_LHII_0 is estimated for each PI dataset.
+
+```{r}
+FRRF_1  <- subset(FRRF, subset = depth == 1)
+FRRF_7  <- subset(FRRF, subset = depth == 7)
+FRRF_40 <- subset(FRRF, subset = depth == 40)
+                   
+FRRF_1   <- standardizeFRRF(frrf      = FRRF_1,  
+                            Fblanc    = FRRF_1$Fblanc,  
+                            convJVPII = 3.6)
+FRRF_7   <- standardizeFRRF(FRRF_7,  Fblanc=FRRF_7$Fblanc,  convJVPII=3.6)
+FRRF_40  <- standardizeFRRF(FRRF_40, Fblanc=FRRF_40$Fblanc, convJVPII=3.6)
+
+a1 <- attributes(FRRF_1)$aLHII_0
+a2 <- attributes(FRRF_7)$aLHII_0
+a3 <- attributes(FRRF_40)$aLHII_0
+
+FRRF_std <- rbind(FRRF_1, FRRF_7, FRRF_40) 
+attributes(FRRF_std)$aLHII_0 <- c(a1, a2, a3)
+
+with(FRRF_std, 
+     plot(E, a_LHII, 
+          col=depth, pch=18))
+abline(h=attributes(FRRF_std)$aLHII_0, col=c(1,7,40))
+```
+
+## Fitting the FRRF data
+
+The standardized data can now be fitted with a PI function. The default is to use the Eilers-Peeters model. We fit each depth and replicate separately. 
+
+It is easiest to write a function for fitting, as there are 9 cases to be fitted. The function also plots the fits, so as to see whether this worked properly.
+
+```{r, fig.width=5, fig.height=8, fig.cap="PI fits of the standardized FRRF data"}
+profile <- unique(FRRF_std[,c("depth", "replicate")])
+
+PARS <- NULL
+
+# Function for fitting (and plotting the fit)
+fitProfile <- function(Depth, Replicate){
+  
+  Sub <- subset(FRRF_std, 
+                subset = depth     == Depth    &
+                         replicate == Replicate)
+  
+  FIT <- fitPI(model    = "EP", 
+               response = Sub$JVPII, 
+               I        = Sub$E)
+  
+  plot(FIT, 
+       main = paste("depth=", Depth,", replicate=", Replicate))
+  
+  c(depth=Depth, replicate=Replicate, FIT$par)
+}
+
+# call the function for each depth x replicate case
+par(mfrow=c(3,2))
+Fits <- NULL
+
+for (i in 1: nrow(profile)){
+  
+  fitcase <- fitProfile(Depth      = profile[i,1], 
+                        Replicate  = profile[i,2])
+  
+  Fits <- rbind(Fits, fitcase)
+}
+
+Fits
+```
+
+## Chlorophyll-specific PI parameters
+
+The fitted values for *alpha* and *ps* show large differences, which partly reflect algal biomass. 
+These parameters are now standardized per unit chlorophyll.
+
+Here we have the choice to use the chlorophyll as it has been measured by the FRRF apparatus, or to pick the chlorophyll as measured with the CTD. 
+
+We merge the parameter file with both Chl measures.
+
+We first calculate the mean Chl concentration as measured with FRRF:
+
+```{r}
+# Mean chlorophyll concentration from FRRF
+Chl <- aggregate(x   = FRRF_std$Chl, 
+                 by  = list(replicate = FRRF_std$replicate, 
+                            depth     = FRRF_std$depth), 
+                 FUN = mean)
+names(Chl)[3] <- "Chl_FRRF"
+```
+
+To get the values of Chl from the CTD, we locate the closest depth point from the CTD cast, and then extract the corresponding Chl value:
+
+```{r}
+# Corresponding Chl from the CTD
+Distance <- outer(X = CTDchl$depth, 
+                  Y = profile$depth, 
+                  FUN = function(x,y) abs(x-y))
+
+Chl$Chl_CTD <- apply(Distance, 
+                     MARGIN = 2,     # use columns
+                     FUN    = function(x) 
+                       CTDchl$Chl[which.min(x)])  # Chl from closest depth
+```
+
+Fitted parameters are now merged with the Chlorophyll estimates:
+
+```{r}
+Fits <- merge(Fits, Chl)
+Fits
+```
+
+As we will calculate the PI parameters for the entire water depth using the CTD-derived Chl measures, we calculate chlorophyll-specific alpha and ps parameters, by dividing with the CTD-derived chlorophyll values.
+
+```{r}
+Fits$alpha_chl <- Fits$alpha / Fits$Chl_CTD 
+Fits$ps_chl    <- Fits$ps    / Fits$Chl_CTD 
+Fits
+```
+
+We will use the average alpha_chl, eopt and ps_chl values for this station to estimate depth-varying PI paramerers:
+
+```{r}
+meanPIpar <- apply(Fits[, c("alpha_chl", "eopt", "ps_chl")], MARGIN=2, FUN=mean)
+meanPIpar
+```
+
+
+## Depth-varying PI parameters
+
+Combining the Chl-specific PI parameters with the Chlorophyll measurements from the CTD, we now estimate depth-varying PI parameters.
+
+```{r}
+PI.pars <- data.frame(depth =CTDchl$depth,
+                      alpha = meanPIpar["alpha_chl"]*CTDchl$Chl,
+                      eopt  = meanPIpar["eopt"],
+                      ps    = meanPIpar["ps_chl"]   *CTDchl$Chl)
+```
+
+## Depth-integrated photosynthesis 
+
+To estimate integrated production, we also need info about the light extinction in the water column (kz).
+
+We convert from mmol electrons per m3 per hour to mg C/m3/d by assuming that we need 5 electrons per carbon, so the conversion factor becomes: 1/5 *12 * 24.
+
+
+```{r, fig.width=8, fig.height=10, fig.cap="integrated production using FRRF data"}
+fac   <- 1/5*12*24            # from mmol e/m3/hr to mgC/m3/d
+times <- par$time
+kz    <- 0.2  # /m
+PS <- integratedPP(times=times, PI.par=PI.pars, It.data=par, kz=kz, convFac=fac)
+plot(PS, mass="mgC", time="d")
+
+```
+
+The daily mean production is now estimated from the timeseries in the PP list:
+
+```{r}
+mean(PS$ts$PP) # mg C/m2/d
+```
+
+\newpage
+
+# labstaf data
+
+```{r}
+dir   <- "../raw_data/labstaf"
+files <- list.files(dir)
+
+LS.att <- data.frame(
+  file = c(
+             "B_1m.txt", "B_7m.txt",  "B_40m.txt"),
+  depth     = c(1,                7,           40), 
+  Fblanc    = c(0.194,        0.175,        0.156)
+)
+```
+
+For reading Labstaf data, the data files are stored with tab-separated; they can be read with read.delim.
+
+```{r}
+LabSTAF <- NULL
+
+for (fn in 1:nrow(LS.att))
+  LabSTAF <- rbind(LabSTAF, 
+            data.frame(
+              depth     = LS.att$depth    [fn],
+              Fblanc    = LS.att$Fblanc   [fn],
+              readFRRF(dir  = dir, 
+                       file = LS.att$file [fn],
+                       txt  = "delim")
+                      )
+                )
+head(LabSTAF, n=2)
+```
+## Converting the Labstaf data
+
+For the labstaf, the volumetric electron flux (JVPII) is already calculated by the machine, assuming an inputted Fblanc, and so the data do not need to be standardized unless the actual blanc fluorescence deviates significantly from the inputted one.  In the data files considered, Fblanc was set to be 0, which is at odds with the actual values (0.156-0.194), so it makes sense to re-standardize the data. 
+
+First, we show that the standaridization procedure implemented in *dtBioG* is consistent with what is done by the LabSTAF.
+
+For the depth=1, the aLHII_0 values is 0.0465 (as given in the input file), so if we standardize the rates with this value, and assuming a blanc = 0, we obtain quasi the same value for JVPII, as provided by the LabSTAF:
+
+```{r}
+Sub <- subset(LabSTAF, subset= depth==1)
+SS  <- standardizeFRRF(Sub, 
+                       convJVPII = 1,
+                       Fblanc    = 0,
+                       aLHII_0   = 0.0465)
+
+with (SS, cbind(JVPII, JVPII_uc))  # almost the same
+```
+
+We thus re-standardize the data, using the correct blancs, and converting the estimated JVPII to *mmol e/m3/hour*.
+
+```{r}
+S1  <- standardizeFRRF(subset(LabSTAF, subset= depth==1), 
+                       Fblanc    = 0.194,
+                       convJVPII = 3.6)
+S2  <- standardizeFRRF(subset(LabSTAF, subset= depth==7), 
+                       Fblanc    = 0.175,
+                       convJVPII = 3.6)
+S3  <- standardizeFRRF(subset(LabSTAF, subset= depth==40), 
+                       Fblanc    = 0.156,
+                       convJVPII = 3.6)
+
+aLHII_0 <- c(attributes(S1)$aLHII_0, attributes(S2)$aLHII_0, attributes(S3)$aLHII_0)
+aLHII_0 
+```
+
+Note the reltively large difference between the aLHII_0 from the LabSTAF and the values generated with the standardization function.
+
+```{r}
+with(rbind(S1, S2, S3), plot(E, a_LHII))
+abline(h=aLHII_0)
+```
+
+The rest is very similar to the treatment of the FRRF data:
+
+```{r, fig.width=8, fig.height=8, fig.cap="PI fits for the standardized labSTAF data (also shows uncorrected data)"}
+par(mfrow=c(2,2), las=1)
+FitLS1 <- fitPI(model="EP", response=S1$JVPII, I=S1$E)
+plot(FitLS1, main = paste("depth=1"))
+with(S1, points(E, JVPII_uc*3.6, pch=18))
+legend("bottomright", pch=c(1, 18), legend=c("corrected", "uncorrected"))
+
+FitLS2 <- fitPI(model="EP", response=S2$JVPII, I=S2$E)
+plot(FitLS2, main = paste("depth=7"))
+with(S2, points(E, JVPII_uc*3.6, pch=18))
+
+FitLS3 <- fitPI(model="EP", response=S3$JVPII, I=S3$E)
+plot(FitLS3, main = paste("depth=40"))
+with(S3, points(E, JVPII_uc*3.6, pch=18))
+
+FitLS <- as.data.frame(rbind(FitLS1$par, FitLS2$par, FitLS3$par))
+
+```
+
+The LabSTAF does not generate estimates for Chlorophyll, so we use those from the CTD:
+
+```{r}
+FitLS$Chl <- c(5, 13.245134, 1.496568)
+FitLS$alpha_chl <- FitLS$alpha/FitLS$Chl
+FitLS$ps_chl <- FitLS$ps/FitLS$Chl
+meanLSpar <- apply(FitLS, MARGIN=2, FUN=mean)
+```
+
+
+```{r}
+PI.parsLS <- data.frame(depth =CTDchl$depth,
+                      alpha = meanLSpar["alpha_chl"]*CTDchl$Chl,
+                      eopt  = meanLSpar["eopt"],
+                      ps    = meanLSpar["ps_chl"]   *CTDchl$Chl)
+```
+
+
+```{r, fig.width=8, fig.height=10, fig.cap="integrated production using LabSTAF data"}
+fac   <- 1/5*12*24            # from mmol e/m3/hr to mgC/m3/d
+times <- par$time
+kz    <- 0.2  # /m
+PSLS <- integratedPP(times=times, 
+                     PI.par=PI.parsLS, 
+                     It.data=par, 
+                     kz=kz, 
+                     convFac=fac)
+
+plot(PSLS, mass="mgC", time="d")
+
+```
+
+The daily mean production is now estimated from the timeseries in the PP list:
+
+```{r}
+mean(PSLS$ts$PP) # mg C/m2/d
+```
