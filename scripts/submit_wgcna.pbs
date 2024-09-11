@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -N wgcna_analysis
+#PBS -o data/logs/wgcna_output_3.log
+#PBS -e data/logs/wgcna_error_3.log
+#PBS -l walltime=08:00:00
+#PBS -l nodes=1:ppn=32
+#PBS -l mem=128gb
+
+# Load necessary modules and activate WGCNA environment
+source activate r_wgcna
+
+# Change directory to where the job was submitted from
+cd $PBS_O_WORKDIR
+
+# Run the R script
+Rscript scripts/wgcna.R
