@@ -1,98 +1,119 @@
-# Load required libraries
-library(dplyr)
-library(tidyr)
+#remotes::install_github("EMODnet/EMODnetWCS")
+
+library(EMODnetWCS)
+library(ows4R)
 library(sf)
-library(terra)
-library(downloader)
-library(directlabels)
 library(ggplot2)
-library(rgl)
-library(ncdf4)
-library(mapdata)
-library(geojsonio)
-library(lattice)
-library(reshape2)
-library(XML)
-library(raster)
+library(terra)
+library(tidyterra)
+library(svglite)
+library(ggspatial)
 
-# Load BPNS EEZ shapefile (download from https://www.marineregions.org/gazetteer.php?p=details&id=26567)
-BPNS_EEZ <- st_read("./data/raw/eez_iho/eez_iho.shp")
-# Convert to data frame for plotting
-BPNS_EEZ <- st_as_sf(BPNS_EEZ)
-
-# Get the spatial extent for the BPNS
-xmin <- extent(BPNS_EEZ)@xmin
-ymin <- extent(BPNS_EEZ)@ymin
-xmax <- extent(BPNS_EEZ)@xmax
-ymax <- extent(BPNS_EEZ)@ymax
-
-# Define a function to read in raster data from the EMODnet bathymetry WCS
-getbathymetry <- function(name = "emodnet:mean",
-                          resolution = "0.2km",
-                          xmin = 2, xmax = 3.5,
-                          ymin = 51, ymax = 52) {
-  bbox <- paste(xmin, ymin, xmax, ymax, sep = ",")
-
-  con <- paste("https://ows.emodnet-bathymetry.eu/wcs?service=wcs&version=1.0.0&request=getcoverage&coverage=",
-               name, "&crs=EPSG:4326&BBOX=", bbox,
-               "&format=image/tiff&interpolation=nearest&resx=0.00208333&resy=0.00208333",
-               sep = "")
-
-  print(con)
-
-  nomfich <- paste(name, "img.tiff", sep = "_")
-  nomfich <- tempfile(nomfich)
-  download(con, nomfich, quiet = TRUE, mode = "wb")
-
-  # Use terra to read the downloaded raster file
-  img <- rast(nomfich)
-  img[img == 0] <- NA
-  img[img < 0] <- 0
-  names(img) <- paste(name)
-  return(img)
-}
-
-# Get the bathymetry data for the BPNS using terra
-bathy_img <- getbathymetry(name = "emodnet:mean",
-                           resolution = "0.2km",
-                           xmin = 2, xmax = 3.5,
-                           ymin = 51, ymax = 52)
-
-# Convert the raster to a data frame for ggplot2
-bathy_df <- as.data.frame(bathy_img, xy = TRUE)
-
-# Define sampling stations (replace with your actual coordinates)
+# Set stations
 stations <- data.frame(
-  Name = c('Station 51', 'Station 130'),
-  Latitude = c(51.53166115, 51.21634923),
-  Longitude = c(3.18280367, 2.85125683)
+  label = c('Station 51', 'Station 130'),
+  latitude = c(51.53166115, 51.21634923),
+  longitude = c(3.18280367, 2.85125683)
+) %>%
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326)
+
+# Define area bounding box
+bbox <- st_as_sfc("MULTIPOLYGON (((1.8 51, 1.8 52, 3.8 52, 3.8 51, 1.8 51)))")
+st_crs(bbox) <- 4326
+
+# Get coastline
+wfs <- WFSClient$new("https://geo.vliz.be/geoserver/MarineRegions/wfs", "2.0.0")
+
+countries <- wfs$getFeatures("MarineRegions:worldcountries_esri_2014",
+       cql_filter = "territory IN ('Belgium', 'France', 'Netherlands')") %>%
+       st_cast(to = "GEOMETRYCOLLECTION")
+
+# Turn GEOMETRYCOLLECTION into multipolygons
+geoms <- lapply(countries$the_geom, `[`)
+mp <- lapply(geoms, function(x) sf::st_multipolygon(x = x))
+sfc_mp <- sf::st_sfc(mp)
+countries$mp <- sfc_mp
+countries <- sf::st_set_geometry(countries, sfc_mp)
+countries$mp <- NULL
+rm(geoms);rm(mp);rm(sfc_mp)
+
+# Crop countries to bounding box
+st_crs(countries) <- 4326
+countries <- countries %>% st_intersection(bbox)
+
+# Get belgian part of the north sea
+be_eez <- wfs$getFeatures("MarineRegions:eez_boundaries",
+  cql_filter = "line_id IN (3730, 3729, 128, 127, 126, 125, 124)") %>%
+  st_cast(to = "MULTILINESTRING") %>%
+  st_cast(to = "LINESTRING")
+
+st_crs(be_eez) <- 4326
+
+# Get bathymetry
+wcs <- emdn_init_wcs_client(service = "bathymetry")
+
+cov <- emdn_get_coverage(wcs,
+                         coverage_id = "emodnet__mean",
+                         bbox = c(xmin = 1.8,
+                                  ymin = 51,
+                                  xmax = 3.8,
+                                  ymax = 52)
 )
 
-# Create bathymetry map with sampling points
+# Mask bathymetry
+cov_masked <- terra::mask(cov, countries, inverse = TRUE)
+
+# Remove bathymetry values above 0
+cov_masked[cov_masked > 0] <- NA
+
+# Get the coordinates from the 'stations' sf object
+station_coords <- st_coordinates(stations)
+
+# Add a column for x and y coordinates to the stations data
+stations$X <- station_coords[, 1]
+stations$Y <- station_coords[, 2]
+
+# Plot with adjustments
+plot.new()
 map <- ggplot() +
-  geom_raster(data = bathy_df, aes(x = x, y = y, fill=bathy_df$`emodnet:mean`), alpha = 0.75) +
-  scale_fill_gradient(low = "white", high = "darkblue", name = "Depth (m)") +
-  geom_sf(data = BPNS_EEZ_fort, colour = "black", fill = NA) +
-  coord_sf(xlim = c(xmin, xmax), ylim = c(ymin, ymax)) +
-  ggtitle("Bathymetry of the Belgian Part of the North Sea with Sampling Points") +
-  xlab("Longitude") + ylab("Latitude") +
-  theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+  # Add Bathymetry
+  geom_spatraster(data = cov_masked) +
+  scale_fill_hypso_c(
+    palette = "wiki-2.0_bathy",
+    name = "Depth (m)",
+    breaks = c(0, -20, -40, -60, -80),
+    labels = c("0", "20", "40", "60", "80")
+  ) +
 
-# Add sampling stations as points on the map
-map <- map +
-  geom_point(data = stations, aes(x = Longitude, y = Latitude),
-             color = "red", size = 3) +
-  geom_text(data = stations, aes(x = Longitude, y = Latitude, label = Name),
-            vjust = -1, hjust = 0.5, color = "black")
+  # Add countries and boundaries background
+  geom_sf(mapping = aes(), data = countries) +
 
-# Display the map
-print(map)
+  # Add stations and label them using the extracted coordinates
+  geom_sf(mapping = aes(), data = stations, size = 0.5) +
+  geom_text(aes(x = X, y = Y, label = label),
+            data = stations,
+            size = 2.5, nudge_x = 0, nudge_y = 0.05) +
 
-# Optional: Add isobaths for more detailed visualization of depth contours
-map_iso <- map +
-  geom_contour(data = bathy_df, aes(x = x, y = y, z = bathy_df$`emodnet:mean`),
-               colour = "gray30", na.rm = TRUE)
+  # Add a frame around the whole plot
+  geom_rect(aes(xmin = 1.8, xmax = 3.8, ymin = 51, ymax = 52),
+            fill = NA, color = "black", size = 0.2) +
 
-# Show the map with isobaths
-print(map_iso)
+  # Add north arrow and scale bar
+  annotation_north_arrow(location = "tl", which_north = "true",
+                         height = unit(0.5, "cm"), width = unit(0.5, "cm"),
+                         style = north_arrow_minimal()) +
+  annotation_scale(location = "br", bar_cols = c("black", "white"),
+                   line_width = 0.5, height = unit(0.15, "cm"),
+                   unit_category = "metric") +
+
+  # Set blank theme
+  theme_minimal() +
+  theme(text = element_text(size = 8)) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        plot.title = element_text(hjust = 0.5),
+        plot.caption = element_text(hjust = 0.5))
+
+# Save the updated map
+ggsave("figures/environmental/BPNS_map.svg", map,
+       width = 10, height = 8, unit = "cm", dpi = 600)
