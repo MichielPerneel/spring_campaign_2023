@@ -30,8 +30,8 @@ samples_genes_matrix <- read.csv(
 )
 
 # Make directories for the results
-dir.create(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus), recursive = TRUE)
-dir.create(paste0("data/analysis/WGCNA_130/transcripts/", genus), recursive = TRUE)
+dir.create(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus), recursive = TRUE)
+dir.create(paste0("data/analysis/WGCNA_130/transcripts_3/", genus), recursive = TRUE)
 
 # Set row names and column names
 rownames(samples_genes_matrix) <- samples_genes_matrix[, 1]
@@ -92,7 +92,7 @@ metadata <- data_env[, c("Date", "day_moment")]
 env_params <- data_env[, c(
   "day_length", "Temperature", "Salinity",
   "Oxygen", "Fluorescence", "NH4", "NO2", "NO3",
-  "PO4", "Si", "TEP_concentration_avg"
+  "PO4", "Si", "TEP"
 )]
 
 #------------- 1. Dendrogram and trait heatmap showing outliers ------------#
@@ -108,7 +108,7 @@ dimnames(traitColors)[[2]] <- paste(names(env_params))
 datColors <- data.frame(outlierC = outlierColor, traitColors)
 
 cat("Plotting sample dendrogram and trait heatmap...\n")
-svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/sample_dendrogram_and_trait_heatmap.svg"))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/sample_dendrogram_and_trait_heatmap.svg"))
 plotDendroAndColors(sampleTree,
                     groupLabels = names(datColors),
                     colors = datColors,
@@ -141,7 +141,7 @@ plot1 <- ggplot(sft_data, aes(x = Power, y = ScaledR2, label = Labels)) +
   geom_hline(yintercept = c(0.80, 0.90), colour = "red", linetype = "dashed") +
   labs(x = "Soft Threshold (power)", y = "Scale Free Topology Model Fit, signed R^2", title = "Scale independence") +
   theme_minimal()
-ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/scale_independence.svg"), plot = plot1, width = 10, height = 5, dpi = 600)
+ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/scale_independence.svg"), plot = plot1, width = 10, height = 5, dpi = 600)
 
 # Plot 2: Mean connectivity
 cat("Plotting Mean connectivity...\n")
@@ -150,7 +150,7 @@ plot2 <- ggplot(sft_data, aes(x = Power, y = MeanConnectivity, label = Labels)) 
   geom_text(colour = "grey", nudge_y = 0.10) +
   labs(x = "Soft Threshold (power)", y = "Mean Connectivity", title = "Mean connectivity") +
   theme_minimal()
-ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/mean_connectivity.svg"), plot = plot2, width = 10, height = 5, dpi = 600)
+ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/mean_connectivity.svg"), plot = plot2, width = 10, height = 5, dpi = 600)
 
 # Choose soft thresholding power based on the plot above
 softPower <- sft$powerEstimate
@@ -170,7 +170,7 @@ dynamicMods <- cutreeDynamic(dendro = geneTree, distM = dissTOM, deepSplit = 4, 
 dynamicColors <- labels2colors(dynamicMods)
 
 cat("Plotting Gene dendrogram and module colors...\n")
-svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/gene_dendrogram_and_module_colors.svg"))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/gene_dendrogram_and_module_colors.svg"))
 plotDendroAndColors(geneTree, dynamicColors, "Dynamic Tree Cut", dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05, main = "Gene dendrogram and module colors")
 dev.off()
 
@@ -181,7 +181,7 @@ MEDiss <- 1 - cor(MEs)
 METree <- flashClust(as.dist(MEDiss), method = "average")
 
 cat("Plotting Clustering of module eigengenes...\n")
-svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/clustering_of_module_eigengenes.svg"))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/clustering_of_module_eigengenes.svg"))
 plot(METree, main = "Clustering of module eigengenes", xlab = "", sub = "")
 abline(h = 0.2, col = "red")
 dev.off()
@@ -191,7 +191,7 @@ mergedColors <- merge$colors
 mergedMEs <- merge$newMEs
 
 cat("Plotting Merged dynamic colors...\n")
-svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/merged_dynamic_colors.svg"))
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/merged_dynamic_colors.svg"))
 plotDendroAndColors(geneTree, cbind(dynamicColors, mergedColors), c("Dynamic Tree Cut", "Merged dynamic"), dendroLabels = FALSE, hang = 0.03, addGuide = TRUE, guideHang = 0.05)
 dev.off()
 
@@ -221,7 +221,7 @@ cat("Creating Module-trait relationships heatmap...\n")
 textMatrix <- paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 1), ")", sep = "")
 dim(textMatrix) <- dim(moduleTraitCor)
 
-svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/module_trait_relationships.svg"), width = 10, height = 10)
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/module_trait_relationships.svg"), width = 10, height = 10)
 par(mar = c(8, 12.5, 3, 3))
 labeledHeatmap(Matrix = moduleTraitCor,
                xLabels = names(env_params),
@@ -262,7 +262,7 @@ p <- ggplot(MElong, aes(x = hour, y = module, fill = ME_expression)) +
   scale_x_discrete(limits = date_labels) +
   guides(fill = guide_colorbar(barwidth = 10, barheight = 1, title.position = "top", title.hjust = 0.5))
 
-ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts/", genus, "/module_eigengene_expression_per_hour.svg"), plot = p, width = 18, height = 6)
+ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/module_eigengene_expression_per_hour.svg"), plot = p, width = 18, height = 6)
 
 #----------------------- 4. Module content ----------------------#
 cat("Finding important genes in each module...\n")
