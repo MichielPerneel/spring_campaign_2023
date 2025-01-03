@@ -1,17 +1,19 @@
 rule fastqc:
-        input:
-                os.path.join(config['raw_reads'], '{sample}_{num}.fastq.gz')
-        output:
-                html = os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_{num}_fastqc.html'),
-                zip = os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_{num}_fastqc.zip')
-        log:
-                os.path.join(config['output_dir'],'logs', 'fastqc', '{sample}_{num}.log')
-        wrapper:
-                '0.27.1/bio/fastqc'
+    input:
+        os.path.join(config['raw_reads'], '{sample}_R{num}.fastq.gz')
+    output:
+        html = os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_R{num}_fastqc.html'),
+        zip = os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_R{num}_fastqc.zip')
+    log: 
+        os.path.join(config['output_dir'], 'logs', 'fastqc', '{sample}_R{num}.log')
+    shell: '''
+    module load FastQC
+    fastqc {input} -o {config[output_dir]}/quality_control/fastqc &> {log}
+    '''
 
 rule multiqc:
     input:
-        qc_files = expand(os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_{num}_fastqc.{ext}'), sample=samples, num=[1, 2], ext=['html', 'zip'])
+        qc_files = expand(os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_R{num}_fastqc.{ext}'), sample=samples, num=[1, 2], ext=['html', 'zip'])
     output:
         report = os.path.join(config['output_dir'], 'quality_control', 'multiqc_report.html'),
         data_dir = directory(os.path.join(config['output_dir'], 'quality_control', 'multiqc_data'))
@@ -26,4 +28,3 @@ rule multiqc:
                 -n {output.report} \
                 &> {log}
         """
-

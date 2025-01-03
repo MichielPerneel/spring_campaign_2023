@@ -15,12 +15,11 @@
 ####  Account and return
 
 #PBS -M michiel.perneel@ugent.be
-#PBS -m ae
 
 #PBS -o /data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/
 
 #### Load Snakemake conda environment
-source activate snakemake
+source activate snakemake_7
 source /data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/config.sh
 
 ##################
@@ -33,4 +32,4 @@ fi
 
 # Initiating snakemake and running workflow in cluster mode
 snakemake --profile hpc_config/ --latency-wait 60 --use-conda --rerun-incomplete \
-    --conda-cleanup-pkgs --conda-prefix ${conda_env}
+    --conda-cleanup-pkgs --conda-prefix ${conda_env} --conda-frontend conda

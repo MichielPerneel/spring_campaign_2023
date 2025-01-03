@@ -67,6 +67,20 @@ cat("Dimensions of datExpr matrix after log2 transformation:", dim(datExpr), "\n
 
 # Read in environmental data
 data_env <- read.csv("data/samples_env.csv", stringsAsFactors = FALSE, sep = ",", header = TRUE, row.names = 1)
+# Read primary production data (PP)
+pp_data <- read.csv("data/raw/LabSTAF/labstaf_combined_data.csv")
+# Combine Station and Sample columns in PP_data into one column
+pp_data$Station <- paste(pp_data$Station, pp_data$Sample, sep = "_")
+# Read zooplankton data
+zooplankton_data <- read.csv("data/analysis/zooplankton_counts.csv")
+
+# Merge PP data with environmental data based on the Station column
+data_env <- data_env %>% rownames_to_column("Station")
+data_env <- data_env %>%
+  inner_join(pp_data %>% select(Station, PP), by = "Station") %>%
+  inner_join(zooplankton_data, by = "Station")
+# Restore row names from Station column after merging
+data_env <- data_env %>% column_to_rownames("Station")
 
 # Remove uninteresting columns
 columns_to_remove <- c(
@@ -86,14 +100,14 @@ datExpr <- datExpr[rownames(data_env), ]
 # Ensure the datasets align correctly
 stopifnot(all(rownames(data_env) == rownames(datExpr)))
 
-# Get the metadata from env_data
+# Get the metadata from data_env
 metadata <- data_env[, c("Date", "day_moment")]
 
-# Get the environmental parameters from env_data
+# Get the environmental parameters from data_env
 env_params <- data_env[, c(
   "day_length", "Temperature", "Salinity",
   "Oxygen", "Fluorescence", "NH4", "NO2", "NO3",
-  "PO4", "Si", "TEP"
+  "PO4", "Si", "TEP", "PP", "Total_Zooplankton_Count"
 )]
 
 #------------- 1. Dendrogram and trait heatmap showing outliers ------------#
@@ -222,7 +236,7 @@ cat("Creating Module-trait relationships heatmap...\n")
 textMatrix <- paste(signif(moduleTraitCor, 2), "\n(", signif(moduleTraitPvalue, 1), ")", sep = "")
 dim(textMatrix) <- dim(moduleTraitCor)
 
-svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/module_trait_relationships.svg"), width = 10, height = 20)
+svg(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/module_trait_relationships.svg"), width = 9, height = 10)
 par(mar = c(8, 12.5, 3, 3))
 labeledHeatmap(Matrix = moduleTraitCor,
                xLabels = names(env_params),
@@ -263,7 +277,7 @@ p <- ggplot(MElong, aes(x = hour, y = module, fill = ME_expression)) +
   scale_x_discrete(limits = date_labels) +
   guides(fill = guide_colorbar(barwidth = 10, barheight = 1, title.position = "top", title.hjust = 0.5))
 
-ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/module_eigengene_expression_per_hour.svg"), plot = p, width = 18, height = 24)
+ggsave(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus, "/module_eigengene_expression_per_hour.svg"), plot = p, width = 10, height = 12)
 
 #----------------------- 4. Module content ----------------------#
 cat("Finding important genes in each module...\n")

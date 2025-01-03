@@ -12,7 +12,7 @@ print('Ok, let\'s go!')
 
 # First, extract annotation information from the metatranscriptome functional annotation
 # Load functional annotations
-functional_annotations = pd.read_table('data/annotation/functional/functional_annotation.emapper.annotations')
+functional_annotations = pd.read_table('data/annotation/functional/130/functional_annotation.emapper.annotations')
 # Cut off weird characters from the transcript names
 functional_annotations['#query'] = functional_annotations['#query'].str.split(".", n=1, expand=True)[0]
 # Rename the query_id column
@@ -23,13 +23,13 @@ transcript_info = functional_annotations[['transcript_id', 'Description']]
 transcript_info = transcript_info[transcript_info['Description'] != '-']
 transcript_info.columns = ['transcript_id', 'annotation']
 
-genera = ['Noctiluca']
+genera = ['Phaeocystis']
 
 for genus in tqdm(genera, desc="Processing genus"):
     print(genus)
     # Combine transcript ids, annotation info, and module membership data for a given module
     ## Create the required annotation file
-    input_dir = os.path.join("data/analysis/WGCNA/transcripts", genus)
+    input_dir = os.path.join("data/analysis/WGCNA_130/transcripts_3", genus)
 
     # Iterate over all modules in folder
     for filename in tqdm(os.listdir(input_dir), desc="Processing modules..."):

@@ -2,7 +2,7 @@ rule functional_annotation:
     input:
         pep=os.path.join(config['output_dir'], 'assembly', 'protein', '{station}', 'metatranscriptome.pep'),
     output:
-        annotated=os.path.join(config['output_dir'], 'annotation', 'functional', '{station}', 'functional_annotation.emapper.annotations'),
+        annotated=os.path.join(config['output_dir'], 'annotation', 'functional_eggnog', '{station}', 'functional_annotation.emapper.annotations'),
     params:
         eggnog_ref_dir=config['eggnog_ref_dir'],
         eggnog_out_dir=os.path.join(config['output_dir'], 'annotation', 'functional_eggnog', '{station}'),
