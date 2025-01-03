@@ -107,9 +107,8 @@ def process_file(file_path):
 
 def merge_kallisto_hpc(input_directory, output_directory):
     """
-    Combines reads from all samples quantified against the assembly using kallisto into a single counts and TPM file.
-    This version is intended to run on an HPC system, and is optimized for memory usage. 
-    It is run by calling the run_kallisto_merge.py script in the submit_merge_kallisto.pbs script.
+    Combines reads from all samples quantified against the assembly using kallisto into combined counts and TPM files
+    for each station. This version is optimized for HPC systems.
 
     :param input_directory: Directory containing processed samples by kallisto.
     :param output_directory: Directory where the combined files for all samples will be saved.
@@ -117,18 +116,35 @@ def merge_kallisto_hpc(input_directory, output_directory):
     # Find all abundance.tsv files within the input directory
     tsvlist = [os.path.join(dp, f) for dp, dn, filenames in os.walk(input_directory) for f in filenames if f == 'abundance.tsv']
     
-    with ProcessPoolExecutor(max_workers=16) as executor:
-        results = list(executor.map(process_file, tsvlist))
+    # Extract station numbers from file paths
+    station_files = {}
+    for filepath in tsvlist:
+        # Extract station number (here "51" or "130")
+        station = os.path.basename(os.path.dirname(filepath)).split('_')[0]
+        if station not in station_files:
+            station_files[station] = []
+        station_files[station].append(filepath)
+    
+    # Process files for each station
+    for station, files in station_files.items():
+        print(f"Processing station {station} with {len(files)} samples.")
 
-    # Merge all TPM and counts dataframes
-    all_tpm = pd.concat([result[0] for result in results], axis=1)
-    all_counts = pd.concat([result[1] for result in results], axis=1)
+        # Use ProcessPoolExecutor to process files in parallel
+        with ProcessPoolExecutor(max_workers=16) as executor:
+            results = list(executor.map(process_file, files))
+        
+        # Merge all TPM and counts dataframes for the current station
+        all_tpm = pd.concat([result[0] for result in results], axis=1)
+        all_counts = pd.concat([result[1] for result in results], axis=1)
 
-    # Write output
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
-    all_tpm.reset_index().to_csv(os.path.join(output_directory, "tpm.csv"), index=False)
-    all_counts.reset_index().to_csv(os.path.join(output_directory, "count.csv"), index=False)
+        # Write output
+        station_output_dir = os.path.join(output_directory, station)
+        if not os.path.exists(station_output_dir):
+            os.makedirs(station_output_dir)
+        all_tpm.reset_index().to_csv(os.path.join(station_output_dir, f"{station}_tpm.csv"), index=False)
+        all_counts.reset_index().to_csv(os.path.join(station_output_dir, f"{station}_count.csv"), index=False)
+
+        print(f"Finished processing station {station}. Output saved to {station_output_dir}.")
 
 def calculate_mapping_rate(run_info_path):
     """Calculate the mapping rate from a kallisto run_info.json file."""

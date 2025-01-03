@@ -9,5 +9,9 @@
 # Change directory to where the job was submitted from
 cd $PBS_O_WORKDIR
 
+# Activate the environment
+## Installed using conda env create -f envs/merge_kallisto.yaml 
+source activate kallisto_merge
+
 # Run the script
 python scripts/run_kallisto_merge.py
