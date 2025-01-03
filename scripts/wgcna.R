@@ -32,6 +32,8 @@ samples_genes_matrix <- read.csv(
 # Make directories for the results
 dir.create(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus), recursive = TRUE)
 dir.create(paste0("data/analysis/WGCNA_130/transcripts_3/", genus), recursive = TRUE)
+dir.create(paste0("figures/metatranscriptomics/WGCNA_130/transcripts_3/", genus), recursive = TRUE)
+dir.create(paste0("data/analysis/WGCNA_130/transcripts_3/", genus), recursive = TRUE)
 
 # Set row names and column names
 rownames(samples_genes_matrix) <- samples_genes_matrix[, 1]
