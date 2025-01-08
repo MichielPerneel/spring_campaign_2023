@@ -8,6 +8,7 @@ library(tibble)
 library(tidyr)
 library(phyloseq)
 library(ggplot2)
+library(oce)
 
 genus_name <- 'Phaeocystis'
 
@@ -15,6 +16,7 @@ genus_name <- 'Phaeocystis'
 genus_data_file <- "data/analysis/phaeocystis_metabolic_functions_counts.csv"
 env_data_file <- "data/samples_env.csv"
 pp_data_file <- "data/raw/LabSTAF/labstaf_combined_data.csv"
+zooplankton_data_file <- 'data/analysis/zooplankton_counts.csv'
 
 # Read the data
 genus_data <- read.csv(genus_data_file, row.names = 1, check.names=FALSE)
@@ -27,11 +29,14 @@ env_data <- env_data[env_data$StationPrefix == 130, ]
 pp_data <- read.csv(pp_data_file)
 # Combine Station and Sample columns in PP_data into one column
 pp_data$Station <- paste(pp_data$Station, pp_data$Sample, sep = "_")
+# Read zooplankton data
+zooplankton_data <- read.csv(zooplankton_data_file)
 
 # Merge PP data with environmental data based on the Station column
 env_data <- env_data %>% rownames_to_column("Station")
 env_data <- env_data %>%
-  inner_join(pp_data %>% select(Station, PP), by = "Station")
+  inner_join(pp_data %>% select(Station, PP), by = "Station") %>%
+  inner_join(zooplankton_data, by = "Station")
 # Restore row names from Station column after merging
 env_data <- env_data %>% column_to_rownames("Station")
 
@@ -71,12 +76,32 @@ env_data$Time <- format(env_data$Date, "%H:%M:%S")
 env_data$Time <- as.numeric(difftime(as.POSIXct(env_data$Time, format = "%H:%M:%S"),
                                      as.POSIXct("00:00:00", format = "%H:%M:%S"),
                                      units = "mins"))
+# Encode the day_moment column as a factor and dummy code it
+## Group Astronomical, Civil, and Nautical twilight as twilight
+env_data$day_moment <- ifelse(env_data$day_moment %in% c("Astronomical twilight", "Civil twilight", "Nautical twilight"), "Twilight", env_data$day_moment)
+env_data$day_moment <- factor(env_data$day_moment)
+# Extract azimuth and altitude from the sunAngle function
+sun_positions <- sunAngle(env_data$Date, env_data$Latitude, env_data$Longitude)
+# Add azimuth and altitude as new columns to your environmental data
+env_data$SunAzimuth <- sun_positions$azimuth
+env_data$SunAltitude <- sun_positions$altitude
+# Create a new binary variable for day (1) and night (0) based on sun altitude
+env_data$Sun <- ifelse(env_data$SunAltitude > 0, 1, 0)
+# Set altitude of the sun to 0 when it is below the horizon
+env_data$SunAltitude <- ifelse(env_data$SunAltitude < 0, 0, env_data$SunAltitude)
+
+## Write the sun data to a new file
+sun_export <- env_data %>%
+  # Row names to column
+  rownames_to_column("Station") %>%
+  select(Station, Date, day_moment, SunAzimuth, SunAltitude, Sun)
+write.csv(sun_export, "data/analysis/sun_data.csv")
 
 # Remove uninformative columns
 env_data <- env_data %>%
   select(-surface_baroclinic_sea_water_velocity, -sea_surface_height_above_sea_level,
          -StationPrefix, -StationSuffix, -Latitude, -Longitude,
-         -Date, -day_moment, -day_length, -Conductivity, -NOX)
+         -Date, -day_length, -Conductivity, -NOX)
 
 # Convert to phyloseq object
 OTU <- otu_table(as.matrix(genus_data), taxa_are_rows = FALSE)
@@ -88,8 +113,12 @@ GenusRCM <- RCM(physeq, k = 2, round = TRUE)
 
 # Constrained analysis, conditioned on sequencing provider
 ## Define covariates and optionally confounders
+covariates <- c("Salinity", "Temperature", "Depth", "TEP", "PP",  "Time",
+                "SunAzimuth", "SunAltitude", "NH4", "NO3", "NO2", "PO4", "Si", "Total_Zooplankton_Count")
+
+## Day_moment does not really work
 covariates <- c("Salinity", "Temperature", "Depth", "TEP", "PP",
-                "NH4", "NO3", "NO2", "PO4", "Si", "Time")
+                "SunAltitude", "NH4", "NO3", "NO2", "PO4", "Si", "Total_Zooplankton_Count")
 
 GenusRCMconstr <- RCM(physeq,
                       k = 2, round = TRUE, responseFun = "linear",
@@ -101,6 +130,7 @@ GenusRCMconstrNonParam <- RCM(physeq,
 
 # Save plots
 plot_path <- function(name) file.path(plot_dir, paste0(name, ".png"))
+plot_path_svg <- function(name) file.path(plot_dir, paste0(name, ".svg"))
 
 png(plot_path("GenusRCM_species_samples"))
 print(plot(GenusRCM, plotType = c("species", "samples")))
@@ -114,17 +144,21 @@ png(plot_path("GenusRCMconstr_variables"))
 print(plot(GenusRCMconstr, plotType = "variables"))
 dev.off()
 
+svg(plot_path_svg("GenusRCMconstr_variables"))
+print(plot(GenusRCMconstr, plotType = "variables"))
+dev.off()
+
 png(plot_path("GenusRCMconstr_variables_samples"))
 print(plot(GenusRCMconstr, plotType = c("variables", "samples"), inflVar = "psi"))
 dev.off()
 
-for (var in c("Temperature", "Salinity", "Depth", "TEP", "PP", "NO3", "NO2", "PO4", "Si", "Shannon", "Deviance")) {
+for (var in c("Temperature", "Salinity", "Depth", "TEP", "PP", "NO3", "NO2", "PO4", "Si", "Total_Zooplankton_Count", "Time", "day_moment", "SunAzimuth", "SunAltitude", "Sun", "Shannon", "Deviance")) {
   png(plot_path(paste0("GenusRCM_species_samples_", var)))
   print(plot(GenusRCM, plotType = c("species", "samples"), samColour = var))
   dev.off()
 }
 
-for (var in c("Temperature", "Salinity", "Depth", "TEP", "PP", "NO3", "NO2", "PO4", "Si", "Shannon", "Deviance")) {
+for (var in c("Temperature", "Salinity", "Depth", "TEP", "PP", "NO3", "NO2", "PO4", "Si", "Total_Zooplankton_Count",  "Time", "day_moment", "SunAzimuth", "SunAltitude", "Sun", "Shannon", "Deviance")) {
   png(plot_path(paste0("GenusRCMconstr_species_samples_", var)))
   print(plot(GenusRCMconstr, plotType = c("species", "samples"), samColour = var))
   dev.off()
@@ -174,7 +208,7 @@ if (!dir.exists(plot_dir)) {
 
 ## Create marginal distribution plots for the environmental data
 env_data_long <- env_data %>%
-  select(c("Temperature", "Salinity", "Depth", "TEP", "NO3", "NO2", "PO4", "Si")) %>%
+  select(c("Temperature", "Salinity", "Depth", "TEP", "NO3", "NO2", "PO4", "Si", "Total_Zooplankton_Count", "Time", "day_moment", "SunAzimuth", "SunAltitude", "Sun", "PP")) %>%
   gather(key = "Variable", value = "Value")
 
 # Histogram plot

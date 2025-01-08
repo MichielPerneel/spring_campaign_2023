@@ -1,0 +1,16 @@
+#!/bin/bash
+#PBS -N get_marker_transcripts
+#PBS -o data/logs/get_marker_transcripts_output.log
+#PBS -e data/logs/get_marker_transcripts_error.log
+#PBS -l walltime=04:00:00
+#PBS -l nodes=1:ppn=16
+#PBS -l mem=128gb
+
+# Load conda environment
+source activate 
+
+# Change directory to where the script was submitted from
+cd $PBS_O_WORKDIR
+
+# Run the Python script
+python scripts/get_marker_transcripts.py

@@ -216,7 +216,7 @@ plot_PP_over_time <- function(data, output_dir = "figures") {
       labs(
         title = paste("PP Over Time - Station", station),
         x = "Time",
-        y = "PP mg C / m / h"
+        y = "PP (mg C/m²/h)"
       ) +
       theme(
         plot.title = element_text(hjust = 0.5),
@@ -230,6 +230,47 @@ plot_PP_over_time <- function(data, output_dir = "figures") {
   }
 }
 
+# Function to create a single plot for PP over time with each station as a panel
+plot_PP_over_time_2 <- function(data, output_dir = "figures") {
+  # Create output directory if it doesn't exist
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
+
+  data <- data %>%
+    filter(!is.na(PP), !is.na(Datetime), is.finite(PP))
+
+  # Determine the starting point for the breaks (closest previous 18:00, 00:00, 06:00, or 12:00)
+  min_time <- min(data$Datetime, na.rm = TRUE)
+  first_break <- as.POSIXct(format(min_time, "%Y-%m-%d 00:00:00"), tz = "UTC")
+
+  # Create the scatter plot with regression smoother for each station
+  p <- ggplot(data, aes(x = Datetime, y = PP)) +
+    geom_point(size = 2, alpha = 0.7) +
+    geom_smooth(method = "lm", size = 1, se = TRUE, color = "black") +
+    facet_wrap(~ Station, scales = "free_x") +
+    theme_minimal(base_size = 15) +
+    labs(
+      title = "PP Over Time",
+      x = "Time",
+      y = "PP (mg C/m²/h)"
+    ) +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      legend.position = "none"
+    ) +
+    scale_x_datetime(
+      date_labels = "%b %d\n%H:%M",
+      breaks = seq(first_break, max(data$Datetime, na.rm = TRUE), by = "6 hours"),
+      minor_breaks = seq(first_break, max(data$Datetime, na.rm = TRUE), by = "3 hours")
+    )
+
+  # Save the plot as a PNG file
+  plot_filename <- paste0(output_dir, "/PP_Two_Stations.png")
+  ggsave(plot_filename, plot = p, width = 12, height = 6)
+}
+
 final_data <-read.csv("data/raw/LabSTAF/labstaf_combined_data.csv")
 final_data$Datetime <- as.POSIXct(final_data$Datetime, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
 
@@ -240,3 +281,4 @@ plot_Ek_over_time(final_data,  output_dir = "figures/FRRF/")
 plot_rPm_over_time(final_data,  output_dir = "figures/FRRF/")
 plot_GOPIIm_over_time(final_data,  output_dir = "figures/FRRF/")
 plot_PP_over_time(final_data, output_dir = "figures/FRRF/")
+plot_PP_over_time_2(final_data, output_dir = "figures/FRRF/")
