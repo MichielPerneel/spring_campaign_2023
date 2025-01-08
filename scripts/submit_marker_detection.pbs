@@ -7,7 +7,7 @@
 #PBS -l mem=128gb
 
 # Load conda environment
-source activate 
+source activate marker_transcripts
 
 # Change directory to where the script was submitted from
 cd $PBS_O_WORKDIR

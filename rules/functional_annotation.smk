@@ -27,6 +27,4 @@ rule functional_annotation:
     emapper.py --annotate_hits_table {params.eggnog_out_dir}/eggNOG.emapper.seed_orthologs \
         --no_file_comments --data_dir {params.eggnog_ref_dir} -o functional_annotation \
         --cpu {threads} --dbmem --output_dir {params.eggnog_out_dir} --override
-
-    mv {params.eggnog_out_dir}/functional_annotation.emapper.annotations {output.annotated}
     '''

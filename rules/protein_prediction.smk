@@ -5,7 +5,7 @@ rule protein_prediction:
         2. Searches for homologs using diamond blastp (optional)
         3. Predicts proteins using TransDecoder.Predict
         """
-        input: os.path.join(config['output_dir'], 'assembly', 'rnaSPAdes', '{station}', 'metatranscriptome.fasta')
+        input: os.path.join(config['output_dir'], 'assembly', 'rnaSPAdes', '{station}', 'final_metatranscriptome.fasta')
         output:
                 bed=os.path.join(config['output_dir'], 'assembly', 'protein', '{station}', 'metatranscriptome.bed'),
                 cds=os.path.join(config['output_dir'], 'assembly', 'protein', '{station}', 'metatranscriptome.cds'),
@@ -13,10 +13,10 @@ rule protein_prediction:
                 pep=os.path.join(config['output_dir'], 'assembly', 'protein', '{station}', 'metatranscriptome.pep')
         params:
                 longORFs_dir=os.path.join(config['output_dir'], 'assembly', 'protein', '{station}'),
-                bed="metatranscriptome.fasta.transdecoder.bed",
-                cds="metatranscriptome.fasta.transdecoder.cds",
-                gff3="metatranscriptome.fasta.transdecoder.gff3",
-                pep="metatranscriptome.fasta.transdecoder.pep",
+                bed="final_metatranscriptome.fasta.transdecoder.bed",
+                cds="final_metatranscriptome.fasta.transdecoder.cds",
+                gff3="final_metatranscriptome.fasta.transdecoder.gff3",
+                pep="final_metatranscriptome.fasta.transdecoder.pep",
                 env = lambda wildcards: """
                         module load TransDecoder
                         module load Perl-bundle-CPAN/5.36.1-GCCcore-12.3.0
