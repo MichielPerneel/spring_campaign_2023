@@ -15,6 +15,21 @@ logging.basicConfig(
 
 # Function to fit GLSAR with splines for a single transcript
 def fit_glsar_with_splines(transcript_data):
+    """
+    Fit a GLSAR model with splines for every single transcript in a sample.
+    The spline approximation is used to account for the non-linear relationship between time and TPL values.
+    The transcript data should contain the following columns:
+    - query_id: Transcript ID
+    - TPL_standardized: Standardized TPL values (TPL divided by total Phaeocystis TPL expression in a sample)
+    - DIC_std: Standardized DIC values (DIC values standardized by mean and standard deviation)
+    - Date: Date of sampling
+    
+    The function returns a dictionary with the following keys:
+    - query_id: Transcript ID
+    - DIC_coef: Coefficient for DIC_std
+    - DIC_pval: P-value for DIC_std
+    - AIC: AIC value for the model
+    """
     try:
         query_id = transcript_data['query_id'].iloc[0]
 

@@ -6,6 +6,9 @@
 #PBS -l nodes=1:ppn=16
 #PBS -l mem=60gb
 
+# Load necessary modules and activate WGCNA environment
+source activate r_pandas
+
 # Change directory to where the job was submitted from
 cd $PBS_O_WORKDIR
 
