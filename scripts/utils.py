@@ -214,6 +214,8 @@ def enrich_mwu(ordered_list, annotation: pd.DataFrame,
 
     # Record the results in a dictionary
     df = pd.DataFrame.from_records(results)
+    print(df.head())
+    print(f"Number of significant results: {df[df['p_val'] < 0.05].shape[0]}")
     # Add the corrected p-values
     df.insert(column="q_val", value=qvals_bh(df["p_val"]), loc=2)
     df["estimate"] = df["U"]/(df["size"] * len(all_indices))

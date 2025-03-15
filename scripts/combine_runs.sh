@@ -20,7 +20,7 @@ for sample in "${RUN1_DIR}"/130_*_R1.fastq.gz "${RUN1_DIR}"/51_*_R1.fastq.gz; do
     run1_r2="${RUN1_DIR}/${sample_name}_R2.fastq.gz"
     run2_r1="${RUN2_DIR}/${sample_name}_1.fastq.gz"
     run2_r2="${RUN2_DIR}/${sample_name}_2.fastq.gz"
-
+x
     # Define output file paths
     combined_r1="${OUTPUT_DIR}/${sample_name}_combined_R1.fastq.gz"
     combined_r2="${OUTPUT_DIR}/${sample_name}_combined_R2.fastq.gz"

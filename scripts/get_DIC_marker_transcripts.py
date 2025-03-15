@@ -21,13 +21,13 @@ def fit_glsar_with_splines(transcript_data):
     The transcript data should contain the following columns:
     - query_id: Transcript ID
     - TPL_standardized: Standardized TPL values (TPL divided by total Phaeocystis TPL expression in a sample)
-    - O2_std: Standardized O2 values (O2 values standardized by mean and standard deviation)
+    - DIC_std: Standardized DIC values (DIC values standardized by mean and standard deviation)
     - Date: Date of sampling
     
     The function returns a dictionary with the following keys:
     - query_id: Transcript ID
-    - O2_coef: Coefficient for O2_std
-    - O2_pval: P-value for O2_std
+    - DIC_coef: Coefficient for DIC_std
+    - DIC_pval: P-value for DIC_std
     - AIC: AIC value for the model
     """
     try:
@@ -36,7 +36,7 @@ def fit_glsar_with_splines(transcript_data):
         # Debugging: Print basic statistics about the data
         print(f"Processing transcript {query_id}")
         print(f"TPL_standardized stats:\n{transcript_data['TPL_standardized'].describe()}")
-        print(f"O2_std stats:\n{transcript_data['O2_std'].describe()}")
+        print(f"DIC_std stats:\n{transcript_data['DIC_std'].describe()}")
 
         # Prepare predictors and response
         y = transcript_data['TPL_standardized']
@@ -48,7 +48,7 @@ def fit_glsar_with_splines(transcript_data):
             print(f"Splines contain NaNs for transcript {query_id}")
             return None
         
-        X = pd.concat([transcript_data[['O2_std']], splines], axis=1)
+        X = pd.concat([transcript_data[['DIC_std']], splines], axis=1)
         X = sm.add_constant(X)  # Add intercept
         
         # Check for NaN or inf in predictors
@@ -63,8 +63,8 @@ def fit_glsar_with_splines(transcript_data):
         # Extract results
         return {
             "query_id": query_id,
-            "O2_coef": result.params.get("O2_std", np.nan),
-            "O2_pval": result.pvalues.get("O2_std", np.nan),
+            "DIC_coef": result.params.get("DIC_std", np.nan),
+            "DIC_pval": result.pvalues.get("DIC_std", np.nan),
             "AIC": result.aic
         }
     except Exception as e:
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     try:
         # Load data
         logging.info("Loading data...")
-        O2 = pd.read_csv('data/analysis/O2_smoother_station_130.csv')
+        DIC = pd.read_csv('data/analysis/DIC_smoother_station_130.csv')
         tpl = pd.read_csv('data/quantification/130/130_tpl.csv').melt(id_vars='target_id', var_name='sample', value_name='tpl')
         phaeo = pd.read_csv('data/annotation/taxonomy_eukprot/130/genus_bins/Phaeocystis_transcriptome_bin.csv').drop(columns='target_id')
         meta = pd.read_csv('data/samples_env.csv')
@@ -87,27 +87,27 @@ if __name__ == "__main__":
         logging.info("Preprocessing data...")
         meta['Date'] = pd.to_datetime(meta['Date'])
         meta = meta.loc[meta['StationPrefix'] == 130]
-        O2['Date'] = pd.to_datetime(O2['Date'], format='mixed').dt.floor('s')
+        DIC['Date.Time'] = pd.to_datetime(DIC['Date.Time'], format='mixed').dt.floor('s')
         meta['Time'] = (meta['Date'] - meta['Date'].min()).dt.total_seconds() / 3600  # Hours since start
 
-        ## Interpolate O2 values for meta timestamps
-        ### Step 1: Add meta['Date'] timestamps to O2
-        O2_augmented = pd.concat([O2, pd.DataFrame({'Date': meta['Date']})]).sort_values(by='Date')
-        ### Step 2: Interpolate O2 at the added timestamps
-        O2_augmented = O2_augmented.set_index('Date').interpolate(method='time').reset_index()
+        ## Interpolate DIC values for meta timestamps
+        ### Step 1: Add meta['Date'] timestamps to DIC
+        DIC_augmented = pd.concat([DIC, pd.DataFrame({'Date.Time': meta['Date']})]).sort_values(by='Date.Time')
+        ### Step 2: Interpolate DIC at the added timestamps
+        DIC_augmented = DIC_augmented.set_index('Date.Time').interpolate(method='time').reset_index()
 
         ### Step 3: Extract interpolated values at meta['Date'] and merge into meta
         meta = meta.sort_values(by='Date')
-        meta = pd.merge(meta, O2_augmented, on='Date', how='left')
-        meta.rename(columns={'y': 'O2'}, inplace=True)
+        meta = pd.merge(meta, DIC_augmented, left_on='Date', right_on='Date.Time', how='left')
+        meta.rename(columns={'y': 'DIC'}, inplace=True)
 
         # Merge transcript data
         data = pd.merge(tpl, phaeo, left_on='target_id', right_on='query_id', how='right')
         data['TPL_standardized'] = data['tpl'] / data.groupby('sample')['tpl'].transform('sum')
         model_data = pd.merge(data, meta, left_on='sample', right_on='Station', how='inner')
 
-        # Standardize preO2tors
-        model_data['O2_std'] = (model_data['O2'] - model_data['O2'].mean()) / model_data['O2'].std()
+        # Standardize predictors
+        model_data['DIC_std'] = (model_data['DIC'] - model_data['DIC'].mean()) / model_data['DIC'].std()
 
         # Filter transcripts expressed in at least 50% of samples
         logging.info("Filtering transcripts...")
@@ -135,14 +135,14 @@ if __name__ == "__main__":
         results_df = pd.DataFrame(results)
 
         # Multiple testing correction
-        if 'O2_pval' in results_df:
+        if 'DIC_pval' in results_df:
             logging.info("Adjusting p-values for multiple testing...")
-            results_df['O2_pval_adj'] = multipletests(results_df['O2_pval'], method='fdr_bh')[1]
+            results_df['DIC_pval_adj'] = multipletests(results_df['DIC_pval'], method='fdr_bh')[1]
 
             # Filter significant markers
-            significant_markers = results_df[results_df['O2_pval_adj'] < 0.05]
+            significant_markers = results_df[results_df['DIC_pval_adj'] < 0.05]
             logging.info(f"Number of significant markers: {len(significant_markers)}")
-            significant_markers.to_csv('data/analysis/significant_markers.csv', index=False)
+            significant_markers.to_csv('data/analysis/significant_markers_DIC.csv', index=False)
         else:
             logging.warning("No valid p-values found in results.")
 

@@ -15,9 +15,9 @@ source activate mbcluster
 # Set paths
 TPL_FILE="/data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/data/quantification/130/130_tpl.csv"
 ANNOTATION_FILE="/data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/data/annotation/taxonomy_eukprot/130/genus_bins/Phaeocystis_transcriptome_bin.csv"
-DIC_SMOOTHER="/data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/data/analysis/DIC_smoother_station_130.csv"
+O2_SMOOTHER="/data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/data/analysis/O2_smoother_station_130.csv"
 META="/data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/data/samples_env.csv"
-OUTPUT_FILE="/data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/data/analysis/phaeocystis_clusters.csv"
+OUTPUT_FILE="/data/gent/vo/001/gvo00125/vsc43619/spring_campaign_2023/data/analysis/phaeocystis_O2_clusters.csv"
 
 # Run the R script
-Rscript scripts/mbcluster_phaeocystis.R $TPL_FILE $ANNOTATION_FILE $DIC_SMOOTHER $META $OUTPUT_FILE
+Rscript scripts/mbcluster_phaeocystis.R $TPL_FILE $ANNOTATION_FILE $O2_SMOOTHER $META $OUTPUT_FILE
