@@ -13,8 +13,7 @@ This repository contains the code associated with the scientific manuscript titl
 5. [License](#license)
 
 ## Introduction
-
-Detailed background and the objective of the study are provided in the manuscript. This code repository aims to supplement the manuscript by providing the necessary code to replicate the study's findings and analyses.
+To the oceanographer, bloom situations present an opportunity to quantify the effect the blooming micro-algae have on the local biogeochemistry of the marine environment. Phaeocystis globosa is a cosmopolitan prymnesiophyte notorious for producing excessive amounts of marine gel during blooms. Short-lived P. globosa blooms heavily impact their environment, not only due to the formation of foam upon bloom termination or occasional toxin production, but also by high rates of primary production and nutrient drawdown. Through the combination of biogeochemical measurements and metatranscriptomics we are able to observe in situ O2 production and dissolved inorganic carbon (DIC) drawdown by P. globosa across a diel timeframe. Using synchronized hourly sampling, we are able to propose a set of metabolic modules and potential genetic markers whose expression closely follows biogeochemical changes. The results from this case study contribute towards describing physiological and biogeochemical rates from omics data.
 
 ## Project structure
 
@@ -99,4 +98,4 @@ This code is licensed under the **Creative Commons Attribution 4.0 International
 ### Citation
 If we've inspired your analysis with our project, give us a shout out! You can cite us as follows:
 
-**Perneel & Dujardin, et al. "Metabolic Insights into Diel Carbon Cycling and Oxygen Production during a *Phaeocystis globosa* bloom." [Journal Name], [2025]. DOI: [Your DOI]**
+**Perneel & Dujardin, et al. "Metabolic Insights into Diel Carbon Cycling and Oxygen Production during a *Phaeocystis globosa* bloom." [Journal Name], [2025]. DOI: [DOI]**
