@@ -52,7 +52,7 @@ cat("Environmental data dimensions:", dim(env_data), "\n")
 cat("Genus data dimensions:", dim(genus_data), "\n")
 
 # Remove rows with NaN values in the environmental data
-env_data <- env_data[complete.cases(env_data), ]
+#env_data <- env_data[complete.cases(env_data), ]
 
 # Preprocess the metabolic data
 zero_cols <- colSums(genus_data == 0) == nrow(genus_data)

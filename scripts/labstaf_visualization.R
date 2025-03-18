@@ -1,284 +1,157 @@
-# Load necessary libraries
 library(ggplot2)
 library(dplyr)
+library(ggpubr)
 
-# Function to create plots for JVPIIm over time for each station
-plot_jvpiim_over_time <- function(data, output_dir = "figures") {
+# Function to create multipanel plots for a given parameter over time for both stations
+plot_parameter <- function(data_51, data_130, parameter, y_label, output_dir = "figures/FRRF/") {
   # Create output directory if it doesn't exist
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
 
-  # Get unique stations
-  stations <- unique(data$Station)
+  data_51 <- data_51 %>%
+    filter(!is.na(!!sym(parameter)), !is.na(Date), is.finite(!!sym(parameter)))
+  data_130 <- data_130 %>%
+    filter(!is.na(!!sym(parameter)), !is.na(Date), is.finite(!!sym(parameter)))
 
-  # Loop over each station and create a plot
-  for (station in stations) {
-    # Filter data for the current station
-    station_data <- data %>% filter(Station == station)
+  # Colour scheme for light phases
+  light_colors <- c(
+    "Night" = "black",
+    "Astronomical twilight" = "darkblue",
+    "Nautical twilight" = "blue",
+    "Civil twilight" = "lightblue",
+    "Day" = "lightyellow"
+  )
 
-    # Create the plot with a smoother
-    p <- ggplot(station_data, aes(x = Datetime, y = JVPIIm)) +
-      geom_line(color = "blue", size = 1) +
-      geom_point(color = "red", size = 2) +
-      geom_smooth(method = "loess", color = "darkgreen", size = 1, se = FALSE) +
-      theme_minimal(base_size = 15) +
-      labs(
-        title = paste("JVPIIm Over Time - Station", station),
-        x = "Time",
-        y = "JVPIIm (µmol photons / m³ / s)"
-      ) +
-      theme(
-        plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 45, hjust = 1)
-      ) +
-      scale_x_datetime(date_labels = "%b %d, %H:%M", date_breaks = "1 hour")
+  first_break_51 <- min(data_51$Date, na.rm = TRUE)
+  # Change first break to 08:00 that day
+  first_break_51 <- as.POSIXct(paste0(format(first_break_51, "%Y-%m-%d"), " 08:00:00"), tz = "UTC")
+  first_break_130 <- min(data_130$Date, na.rm = TRUE)
+  # Change first break to 08:00 that day
+  first_break_130 <- as.POSIXct(paste0(format(first_break_130, "%Y-%m-%d"), " 08:00:00"), tz = "UTC")
 
-    # Save the plot as a PNG file
-    plot_filename <- paste0(output_dir, "/JVPIIm_Station_", station, ".png")
-    ggsave(plot_filename, plot = p, width = 10, height = 6)
-  }
-}
+  y_limits <- range(c(data_51[[parameter]], data_130[[parameter]]), na.rm = TRUE)
 
-# Function to create plots for Alpha over time for each station
-plot_alpha_over_time <- function(data, output_dir = "figures") {
-  # Create output directory if it doesn't exist
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  # Get unique stations
-  stations <- unique(data$Station)
-
-  # Loop over each station and create a plot
-  for (station in stations) {
-    # Filter data for the current station
-    station_data <- data %>% filter(Station == station)
-
-    # Create the plot with a smoother
-    p <- ggplot(station_data, aes(x = Datetime, y = Alpha)) +
-      geom_line(color = "blue", size = 1) +
-      geom_point(color = "red", size = 2) +
-      geom_smooth(method = "loess", color = "darkgreen", size = 1, se = FALSE) +
-      theme_minimal(base_size = 15) +
-      labs(
-        title = paste("Alpha Over Time - Station", station),
-        x = "Time",
-        y = "Alpha"
-      ) +
-      theme(
-        plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 45, hjust = 1)
-      ) +
-      scale_x_datetime(date_labels = "%b %d, %H:%M", date_breaks = "1 hour")
-
-    # Save the plot as a PNG file
-    plot_filename <- paste0(output_dir, "/Alpha_Station_", station, ".png")
-    ggsave(plot_filename, plot = p, width = 10, height = 6)
-  }
-}
-
-# Function to create plots for Ek over time for each station
-plot_Ek_over_time <- function(data, output_dir = "figures") {
-  # Create output directory if it doesn't exist
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  # Get unique stations
-  stations <- unique(data$Station)
-
-  # Loop over each station and create a plot
-  for (station in stations) {
-    # Filter data for the current station
-    station_data <- data %>% filter(Station == station)
-
-    # Create the plot with a smoother
-    p <- ggplot(station_data, aes(x = Datetime, y = Ek)) +
-      geom_line(color = "blue", size = 1) +
-      geom_point(color = "red", size = 2) +
-      geom_smooth(method = "loess", color = "darkgreen", size = 1, se = FALSE) +
-      theme_minimal(base_size = 15) +
-      labs(
-        title = paste("Ek Over Time - Station", station),
-        x = "Time",
-        y = "Ek"
-      ) +
-      theme(
-        plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 45, hjust = 1)
-      ) +
-      scale_x_datetime(date_labels = "%b %d, %H:%M", date_breaks = "1 hour")
-
-    # Save the plot as a PNG file
-    plot_filename <- paste0(output_dir, "/Ek_Station_", station, ".png")
-    ggsave(plot_filename, plot = p, width = 10, height = 6)
-  }
-}
-
-# Function to create plots for rPm over time for each station
-plot_rPm_over_time <- function(data, output_dir = "figures") {
-  # Create output directory if it doesn't exist
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  # Get unique stations
-  stations <- unique(data$Station)
-
-  # Loop over each station and create a plot
-  for (station in stations) {
-    # Filter data for the current station
-    station_data <- data %>% filter(Station == station)
-
-    # Create the plot with a smoother
-    p <- ggplot(station_data, aes(x = Datetime, y = rPm)) +
-      geom_line(color = "blue", size = 1) +
-      geom_point(color = "red", size = 2) +
-      geom_smooth(method = "loess", color = "darkgreen", size = 1, se = FALSE) +
-      theme_minimal(base_size = 15) +
-      labs(
-        title = paste("rPm Over Time - Station", station),
-        x = "Time",
-        y = "rPm"
-      ) +
-      theme(
-        plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 45, hjust = 1)
-      ) +
-      scale_x_datetime(date_labels = "%b %d, %H:%M", date_breaks = "1 hour")
-
-    # Save the plot as a PNG file
-    plot_filename <- paste0(output_dir, "/rPm_Station_", station, ".png")
-    ggsave(plot_filename, plot = p, width = 10, height = 6)
-  }
-}
-
-# Function to create plots for GOPIIm over time for each station
-plot_GOPIIm_over_time <- function(data, output_dir = "figures") {
-  # Create output directory if it doesn't exist
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  # Get unique stations
-  stations <- unique(data$Station)
-
-  # Loop over each station and create a plot
-  for (station in stations) {
-    # Filter data for the current station
-    station_data <- data %>% filter(Station == station)
-
-    # Create the plot with a smoother
-    p <- ggplot(station_data, aes(x = Datetime, y = GOPIIm)) +
-      geom_line(color = "blue", size = 1) +
-      geom_point(color = "red", size = 2) +
-      geom_smooth(method = "loess", color = "darkgreen", size = 1, se = FALSE) +
-      theme_minimal(base_size = 15) +
-      labs(
-        title = paste("GOPIIm Over Time - Station", station),
-        x = "Time",
-        y = "GOPIIm"
-      ) +
-      theme(
-        plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 45, hjust = 1)
-      ) +
-      scale_x_datetime(date_labels = "%b %d, %H:%M", date_breaks = "1 hour")
-
-    # Save the plot as a PNG file
-    plot_filename <- paste0(output_dir, "/GOPIIm_Station_", station, ".png")
-    ggsave(plot_filename, plot = p, width = 10, height = 6)
-  }
-}
-
-# Function to create plots for PP over time for each station
-plot_PP_over_time <- function(data, output_dir = "figures") {
-  # Create output directory if it doesn't exist
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  # Get unique stations
-  stations <- unique(data$Station)
-
-  # Loop over each station and create a plot
-  for (station in stations) {
-    # Filter data for the current station
-    station_data <- data %>% filter(Station == station)
-
-    # Create the plot with a smoother
-    p <- ggplot(station_data, aes(x = Datetime, y = PP)) +
-      geom_line(color = "blue", size = 1) +
-      geom_point(color = "red", size = 2) +
-      geom_smooth(method = "loess", color = "darkgreen", size = 1, se = FALSE) +
-      theme_minimal(base_size = 15) +
-      labs(
-        title = paste("PP Over Time - Station", station),
-        x = "Time",
-        y = "PP (mg C/m²/h)"
-      ) +
-      theme(
-        plot.title = element_text(hjust = 0.5),
-        axis.text.x = element_text(angle = 45, hjust = 1)
-      ) +
-      scale_x_datetime(date_labels = "%b %d, %H:%M", date_breaks = "1 hour")
-
-    # Save the plot as a PNG file
-    plot_filename <- paste0(output_dir, "/PP_Station_", station, ".png")
-    ggsave(plot_filename, plot = p, width = 10, height = 6)
-  }
-}
-
-# Function to create a single plot for PP over time with each station as a panel
-plot_PP_over_time_2 <- function(data, output_dir = "figures") {
-  # Create output directory if it doesn't exist
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  data <- data %>%
-    filter(!is.na(PP), !is.na(Datetime), is.finite(PP))
-
-  # Determine the starting point for the breaks (closest previous 18:00, 00:00, 06:00, or 12:00)
-  min_time <- min(data$Datetime, na.rm = TRUE)
-  first_break <- as.POSIXct(format(min_time, "%Y-%m-%d 00:00:00"), tz = "UTC")
-
-  # Create the scatter plot with regression smoother for each station
-  p <- ggplot(data, aes(x = Datetime, y = PP)) +
-    geom_point(size = 2, alpha = 0.7) +
-    geom_smooth(method = "lm", size = 1, se = TRUE, color = "black") +
-    facet_wrap(~ Station, scales = "free_x") +
-    theme_minimal(base_size = 15) +
-    labs(
-      title = "PP Over Time",
-      x = "Time",
-      y = "PP (mg C/m²/h)"
-    ) +
+  # Left panel (station 51)
+  p1 <- ggplot(data_51, aes(x = Date, y = !!sym(parameter))) +
+    geom_rect(data = data_51,
+              aes(xmin = Date, xmax = lead(Date, default = last(Date)), ymin = -Inf, ymax = Inf, fill = day_moment), alpha = 0.3) +
+    scale_fill_manual(values = light_colors, guide = guide_legend(title = "Light phase")) +
+    geom_point(alpha = 0.7) +
+    geom_smooth(method = "loess", se = TRUE, color = "black") +
+    theme_minimal() +
     theme(
       plot.title = element_text(hjust = 0.5, face = "bold"),
-      axis.text.x = element_text(angle = 45, hjust = 1),
-      legend.position = "none"
+      axis.text.x = element_text(angle = 45, hjust = 1)
     ) +
     scale_x_datetime(
       date_labels = "%b %d\n%H:%M",
-      breaks = seq(first_break, max(data$Datetime, na.rm = TRUE), by = "6 hours"),
-      minor_breaks = seq(first_break, max(data$Datetime, na.rm = TRUE), by = "3 hours")
-    )
+      breaks = seq(first_break_51, max(data_51$Date, na.rm = TRUE), by = "4 hours"),
+      minor_breaks = seq(first_break_51, max(data_51$Date, na.rm = TRUE), by = "2 hours")
+    ) +
+    coord_cartesian(ylim = y_limits) +
+    labs(y = y_label) +
+    ggtitle("Station 51")
+
+  # Right panel (station 130)
+  p2 <- ggplot(data_130, aes(x = Date, y = !!sym(parameter))) +
+    geom_rect(data = data_130,
+              aes(xmin = Date, xmax = lead(Date, default = last(Date)), ymin = -Inf, ymax = Inf, fill = day_moment), alpha = 0.3) +
+    scale_fill_manual(values = light_colors, guide = guide_legend(title = "Light phase")) +
+    geom_point(alpha = 0.7) +
+    geom_smooth(method = "loess", se = TRUE, color = "black") +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(hjust = 0.5, face = "bold"),
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    ) +
+    scale_x_datetime(
+      date_labels = "%b %d\n%H:%M",
+      breaks = seq(first_break_130, max(data_130$Date, na.rm = TRUE), by = "4 hours"),
+      minor_breaks = seq(first_break_130, max(data_130$Date, na.rm = TRUE), by = "2 hours")
+    ) +
+    coord_cartesian(ylim = y_limits) +
+    ylab(NULL) +
+    ggtitle("Station 130")
+
+  # Join both panels in a single plot
+  final_plot <- ggarrange(p1, p2, ncol = 2, align = "hv", common.legend = TRUE, legend = "right")
 
   # Save the plot as a PNG file
-  plot_filename <- paste0(output_dir, "/PP_Two_Stations.png")
-  ggsave(plot_filename, plot = p, width = 12, height = 6)
+  plot_filename <- paste0(output_dir, parameter, "_Multipanel.png")
+  ggsave(plot_filename, plot = final_plot, width = 22, height = 9, dpi = 800, units = "cm")
+
+  # Save the plot as a SVG file
+  plot_filename <- paste0(output_dir, parameter, "_Multipanel.svg")
+  ggsave(plot_filename, plot = final_plot, width = 22, height = 9, dpi = 800, units = "cm")
 }
 
-final_data <-read.csv("data/raw/LabSTAF/labstaf_combined_data.csv")
-final_data$Datetime <- as.POSIXct(final_data$Datetime, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
+# Read the csv parsed data
+station_130 <- read.csv("data/raw/LabSTAF/labstaf_csv_data_130.csv")
+station_51 <- read.csv("data/raw/LabSTAF/labstaf_csv_data_51.csv")
+metadata <- read.csv("data/samples_env.csv")
 
-# Call the functions to generate plots
-plot_jvpiim_over_time(final_data, output_dir = "figures/FRRF/")
-plot_alpha_over_time(final_data,  output_dir = "figures/FRRF/")
-plot_Ek_over_time(final_data,  output_dir = "figures/FRRF/")
-plot_rPm_over_time(final_data,  output_dir = "figures/FRRF/")
-plot_GOPIIm_over_time(final_data,  output_dir = "figures/FRRF/")
-plot_PP_over_time(final_data, output_dir = "figures/FRRF/")
-plot_PP_over_time_2(final_data, output_dir = "figures/FRRF/")
+# Fix column names
+colnames(station_51)[1:21] <- c("Station", "Alpha", "Beta", "Ek", "EkBeta", "rPm",
+                                "JVPIIm", "GOPIIm", "Fo", "Fm", "Fv", "Fv_Fm", "Fv_Fmc",
+                                "F_prime", "Fm_prime", "Fq_prime", "Fq_Fm_prime",
+                                "Fq_Fmc_prime", "NPQ", "NSV", "PP")
+colnames(station_130)[1:21] <- c("Station", "Alpha", "Beta", "Ek", "EkBeta", "rPm",
+                                 "JVPIIm", "GOPIIm", "Fo", "Fm", "Fv", "Fv_Fm", "Fv_Fmc",
+                                 "F_prime", "Fm_prime", "Fq_prime", "Fq_Fm_prime",
+                                 "Fq_Fmc_prime", "NPQ", "NSV", "PP")
+
+# Merge metadata to bring in Date and day_moment
+station_51 <- station_51 %>%
+  left_join(metadata, by = "Station") %>%
+  mutate(Date = as.POSIXct(Date, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")) %>%
+  # Set photosynthesis-related parameters to zero during respective nighttime periods
+  mutate(
+    JVPIIm = ifelse(day_moment == "Night", 0, JVPIIm),
+    GOPIIm = ifelse(day_moment == "Night", 0, GOPIIm),
+    PP = ifelse(day_moment == "Night", 0, PP)
+  ) %>%
+  # Remove rows with very big negative values
+  filter(JVPIIm > -1000, GOPIIm > -1000, PP > -1000) %>%
+  # Sort according to Date
+  arrange(Date)
+
+station_130 <- station_130 %>%
+  left_join(metadata, by = "Station") %>%
+  mutate(Date = as.POSIXct(Date, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")) %>%
+  # Set photosynthesis-related parameters to zero during respective nighttime periods
+  mutate(
+    JVPIIm = ifelse(day_moment == "Night", 0, JVPIIm),
+    GOPIIm = ifelse(day_moment == "Night", 0, GOPIIm),
+    PP = ifelse(day_moment == "Night", 0, PP)
+  ) %>%
+  # Remove rows with very big negative values
+  filter(JVPIIm > -1000, GOPIIm > -1000, PP > -1000) %>%
+  # Sort according to Date
+  arrange(Date)
+
+# Define biological parameters and their corresponding labels
+parameters <- list(
+  list("JVPIIm", "JVPIIm (µmol photons / m³ / s)"),
+  list("Alpha", "Alpha"),
+  list("Ek", "Ek (µmol photons / m² / s)"),
+  list("rPm", "rPm"),
+  list("GOPIIm", "GOPIIm (mmol O2 / m³ / h)"),
+  list("PP", "PP (mg C/m²/h)"),
+  list("NPQ", "Non-Photochemical Quenching (NPQ)"),
+  list("NSV", "Non-Photochemical Quenching (NSV)"),
+  list("Fo", "Fo (Minimum Fluorescence)"),
+  list("Fm", "Fm (Maximum Fluorescence)"),
+  list("Fv", "Fv (Variable Fluorescence)"),
+  list("Fv_Fm", "Fv/Fm (PSII Efficiency)"),
+  list("F_prime", "F' (Instantaneous Fluorescence)"),
+  list("Fm_prime", "Fm' (Max Fluorescence under Light)"),
+  list("Fq_prime", "Fq' (Fluorescence Quantum Yield)"),
+  list("Fq_Fm_prime", "Fq'/Fm' (Effective PSII Quantum Yield)"),
+  list("Fq_Fmc_prime", "Fq'/Fmc' (Alternative Yield Normalization)")
+)
+
+# Generate multipanel plots for each parameter with station-specific shading
+for (param in parameters) {
+  plot_parameter(station_51, station_130, param[[1]], param[[2]])
+}

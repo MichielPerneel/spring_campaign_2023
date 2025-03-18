@@ -30,7 +30,7 @@ Sys.setenv(TZ='UTC')
 
 # read data ---------------------------------------------------------------
 
-SiSt_202304 <- read.csv("data/raw/11SS20230401.csv",sep = ",", dec=".", header=TRUE )
+SiSt_202304 <- read.csv("data/raw/11SS20230401_DO.csv",sep = ",", dec=".", header=TRUE )
 
 SiSt_202304$Date.Time <- as.POSIXct(strptime(SiSt_202304$Date.Time, format="%Y-%m-%dT%H:%M:%S", tz="UTC"), format="%Y-%m-%d %H:%M:%S",tz="UTC")
 
@@ -42,15 +42,15 @@ Spot_samples <- read.csv("data/raw/Spot_carb_jn2023.csv",sep = ",", dec=".", hea
 
 Spot_samples$Date.Time <- as.POSIXct(strptime(Spot_samples$Date.Time, format="%Y-%m-%d %H:%M:%S", tz="UTC"), format="%Y-%m-%d %H:%M:%S",tz="UTC")
 
-# Extract data for Station 51: 2023-04-18 13:00 to 2023-05-19 09:00
+# Extract data for Station 51: 2023-04-18 13:00 to 2023-05-19 09:00 (local time, UTC+2)
 data_51 <- SiSt_202304 %>%
-  filter(Date.Time >= as.POSIXct("2023-04-18 13:00:00", tz = "UTC") &
-           Date.Time <= as.POSIXct("2023-04-19 09:30:00", tz = "UTC"))
+  filter(Date.Time >= as.POSIXct("2023-04-18 11:00:00", tz = "UTC") &
+           Date.Time <= as.POSIXct("2023-04-19 07:30:00", tz = "UTC"))
 
-# Extract data for Station 130: 2023-04-20 10:00 to 2023-04-21 10:00
+# Extract data for Station 130: 2023-04-20 10:00 to 2023-04-21 10:00 (local time, UTC+2)
 data_130 <- SiSt_202304 %>%
-  filter(Date.Time >= as.POSIXct("2023-04-20 10:00:00", tz = "UTC") &
-           Date.Time <= as.POSIXct("2023-04-21 10:30:00", tz = "UTC"))
+  filter(Date.Time >= as.POSIXct("2023-04-20 08:00:00", tz = "UTC") &
+           Date.Time <= as.POSIXct("2023-04-21 08:30:00", tz = "UTC"))
 
 # Read ICOS oxygen data files
 oxygen_files <- list.files("data/raw/ICOS_Oxygen_processed-HT", pattern = "*.csv", full.names = TRUE)
@@ -124,11 +124,27 @@ data_130_clean$DIC <- DIC_130$DIC * 1e6
 
 # Function to match oxygen data based on Date-Time -----------------------------
 match_oxygen <- function(data, oxygen_data) {
-  data %>%
-    rowwise() %>%
-    mutate(
-      O2uM = oxygen_data$O2uM[which.min(abs(difftime(oxygen_data$Date, Date.Time, units = "secs")))]
-    )
+  # Convert data to data.table format for efficient joining
+  oxygen_dt <- as.data.table(oxygen_data)
+  data_dt <- as.data.table(data)
+
+  # Ensure time columns are of the same class
+  oxygen_dt[, Date := as.POSIXct(Date, tz = "UTC")]
+  data_dt[, Date.Time := as.POSIXct(Date.Time, tz = "UTC")]
+  # Rename column for joining
+  setnames(data_dt, "Date.Time", "Date")
+
+  # Perform a rolling join to get the closest match
+  setkey(oxygen_dt, Date)
+  matched_data <- oxygen_dt[data_dt, roll = "nearest", on = "Date", nomatch = 0]
+
+  # Ensure original dataset structure is preserved
+  data_dt$O2uM <- matched_data$O2uM
+
+  # Convert back to tibble
+  data_clean <- as_tibble(data_dt)
+  # Return the cleaned data
+  return(data_clean)
 }
 
 # Match oxygen data for Station 51
@@ -139,8 +155,8 @@ data_130_clean <- match_oxygen(data_130_clean, oxygen_data)
 
 # Create plot for pCO2
 pco2_plot <- ggplot() +
-  geom_point(data = data_51_clean, aes(x = Date.Time, y = pCO2, color = "Station 51"), size = 1, alpha = 0.75) +
-  geom_point(data = data_130_clean, aes(x = Date.Time, y = pCO2, color = "Station 130"), size = 1, alpha = 0.75) +
+  geom_point(data = data_51_clean, aes(x = Date, y = pCO2, color = "Station 51"), size = 1, alpha = 0.75) +
+  geom_point(data = data_130_clean, aes(x = Date, y = pCO2, color = "Station 130"), size = 1, alpha = 0.75) +
   labs(y = expression(paste("pCO"[2], " (", mu, "atm)")), x = "Date-Time", color = "Station") +
   scale_color_manual(values = c("Station 51" = "blue", "Station 130" = "red")) +
   theme_minimal(base_size = 14) +
@@ -150,8 +166,8 @@ pco2_plot
 
 # Create plot for DIC
 dic_plot <- ggplot() +
-  geom_point(data = data_51_clean, aes(x = Date.Time, y = DIC, color = "Station 51"), size = 1, alpha = 0.75) +
-  geom_point(data = data_130_clean, aes(x = Date.Time, y = DIC, color = "Station 130"), size = 1, alpha = 0.75) +
+  geom_point(data = data_51_clean, aes(x = Date, y = DIC, color = "Station 51"), size = 1, alpha = 0.75) +
+  geom_point(data = data_130_clean, aes(x = Date, y = DIC, color = "Station 130"), size = 1, alpha = 0.75) +
   labs(y = expression(paste("DIC (", mu, "mol/kg)")), x = "Date-Time", color = "Station") +
   scale_color_manual(values = c("Station 51" = "blue", "Station 130" = "red")) +
   theme_minimal(base_size = 14) +
@@ -159,10 +175,21 @@ dic_plot <- ggplot() +
 
 dic_plot
 
+# Create plot for Oxygen
+o2_plot <- ggplot() +
+  geom_point(data = data_51_clean, aes(x = Date, y = O2uM, color = "Station 51"), size = 1, alpha = 0.75) +
+  geom_point(data = data_130_clean, aes(x = Date, y = O2uM, color = "Station 130"), size = 1, alpha = 0.75) +
+  labs(y = expression(paste("Oxygen (", mu, "mol/L)")), x = "Date-Time", color = "Station") +
+  scale_color_manual(values = c("Station 51" = "blue", "Station 130" = "red")) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+o2_plot
+
 # Function to create a dual y-axis plot with smoother
 dual_axis_plot <- function(data, station_name, start_time, end_time, y_limits_pco2, y_limits_dic) {
   # Create the primary plot for pCO2
-  p1 <- ggplot(data, aes(x = Date.Time, y = pCO2)) +
+  p1 <- ggplot(data, aes(x = Date, y = pCO2)) +
     geom_point(size = 1, alpha = 0.75) +
     geom_smooth(method = "loess", color = "grey", se = TRUE) +
     labs(y = expression(paste("pCO"[2], " (", mu, "atm)")), x = NULL) +
@@ -174,7 +201,7 @@ dual_axis_plot <- function(data, station_name, start_time, end_time, y_limits_pc
           axis.ticks.x = element_blank())
 
   # Create the secondary plot for DIC
-  p2 <- ggplot(data, aes(x = Date.Time, y = DIC)) +
+  p2 <- ggplot(data, aes(x = Date, y = DIC)) +
     geom_point(size = 1, alpha = 0.75) +
     geom_smooth(method = "loess", color = "grey", se = TRUE) +
     labs(y = expression(paste("DIC (", mu, "mol/kg)")), x = "Date-Time") +
@@ -189,12 +216,12 @@ dual_axis_plot <- function(data, station_name, start_time, end_time, y_limits_pc
                top = paste("Station", station_name))
 }
 
-# Set start and end times for the plots (10:00 to 10:00 the following day)
-start_time_51 <- "2023-04-18 10:00:00"
-end_time_51 <- "2023-04-19 10:00:00"
+# Set start and end times for the plots (time we were anchored)
+start_time_51 <- "2023-04-18 11:00:00"
+end_time_51 <- "2023-04-19 08:15:00"
 
-start_time_130 <- "2023-04-20 10:00:00"
-end_time_130 <- "2023-04-21 10:00:00"
+start_time_130 <- "2023-04-20 08:00:00"
+end_time_130 <- "2023-04-21 08:15:00"
 
 # Plot for Station 51
 dual_axis_plot(data_51_clean, station_name = "51", start_time = start_time_51, end_time = end_time_51)
@@ -205,37 +232,37 @@ dual_axis_plot(data_130_clean, station_name = "130", start_time = start_time_130
 # Function to create a triple-panel plot for pCO2, DIC, and Oxygen -------------
 triple_axis_plot <- function(data, station_name, start_time, end_time) {
   # Plot for pCO2
-  p1 <- ggplot(data, aes(x = Date.Time, y = pCO2)) +
+  p1 <- ggplot(data, aes(x = Date, y = pCO2)) +
     geom_point(size = 1, alpha = 0.75) +
     geom_smooth(method = "loess", color = "grey", se = TRUE) +
     labs(y = expression(paste("pCO"[2], " (", mu, "atm)")), x = NULL) +
     scale_x_datetime(limits = c(as.POSIXct(start_time, tz = "UTC"),
                                 as.POSIXct(end_time, tz = "UTC")),
-                     date_breaks = "6 hours", date_labels = "%d-%b %H:%M") +
+                     date_breaks = "4 hours", date_labels = "%d-%b %H:%M") +
     theme_minimal(base_size = 11) +
     theme(axis.text.x = element_blank(),
           axis.ticks.x = element_blank())
 
   # Plot for DIC
-  p2 <- ggplot(data, aes(x = Date.Time, y = DIC)) +
+  p2 <- ggplot(data, aes(x = Date, y = DIC)) +
     geom_point(size = 1, alpha = 0.75) +
     geom_smooth(method = "loess", color = "grey", se = TRUE) +
     labs(y = expression(paste("DIC (", mu, "mol/kg)")), x = NULL) +
     scale_x_datetime(limits = c(as.POSIXct(start_time, tz = "UTC"),
                                 as.POSIXct(end_time, tz = "UTC")),
-                     date_breaks = "6 hours", date_labels = "%d-%b %H:%M") +
+                     date_breaks = "4 hours", date_labels = "%d-%b %H:%M") +
     theme_minimal(base_size = 11) +
     theme(axis.text.x = element_blank(),
           axis.ticks.x = element_blank())
 
   # Plot for Oxygen (O2uM)
-  p3 <- ggplot(data, aes(x = Date.Time, y = O2uM)) +
+  p3 <- ggplot(data, aes(x = Date, y = O2uM)) +
     geom_point(size = 1, alpha = 0.75) +
     geom_smooth(method = "loess", color = "grey", se = TRUE) +
     labs(y = expression(paste("Oxygen (", mu, "mol/L)")), x = "Date-Time") +
     scale_x_datetime(limits = c(as.POSIXct(start_time, tz = "UTC"),
                                 as.POSIXct(end_time, tz = "UTC")),
-                     date_breaks = "6 hours", date_labels = "%d-%b %H:%M") +
+                     date_breaks = "4 hours", date_labels = "%d-%b %H:%M") +
     theme_minimal(base_size = 11) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
@@ -251,12 +278,15 @@ triple_axis_plot(data_51_clean, station_name = "51", start_time = start_time_51,
 triple_axis_plot(data_130_clean, station_name = "130", start_time = start_time_130, end_time = end_time_130)
 
 # Function to create a single plot for a given parameter ------------------------
-create_plot <- function(data, y_var, y_label, color, y_limits, show_x_axis = TRUE, smoother_span = 0.5) {
-  p <- ggplot(data, aes(x = Date.Time, y = !!sym(y_var))) +
+create_plot <- function(data, y_var, y_label, color, y_limits, start_time, end_time, show_x_axis = TRUE, smoother_span = 0.5) {
+  p <- ggplot(data, aes(x = Date, y = !!sym(y_var))) +
     geom_point(size = 1, alpha = 0.75, color = "black") +
     geom_smooth(method = "loess", color = color, se = TRUE, span = smoother_span) +
     labs(y = y_label, x = NULL) +
-    scale_x_datetime(date_breaks = "6 hours", date_labels = "%d-%b %H:%M") +
+    scale_x_datetime(limits = c(as.POSIXct(start_time, tz = "UTC"),
+                                as.POSIXct(end_time, tz = "UTC")),
+                     date_breaks = "4 hours", date_labels = "%d-%b %H:%M",
+                     date_minor_breaks = "2 hours") +
     scale_y_continuous(limits = y_limits) +
     theme_bw(base_size = 12) +
     theme(axis.text.x = if (show_x_axis) element_text(angle = 45, hjust = 1) else element_blank(),
@@ -282,15 +312,22 @@ y_limits_o2 <- c(
   max(c(data_51_clean$O2uM, data_130_clean$O2uM), na.rm = TRUE)
 )
 
+y_limits_ta <- c(
+  min(c(data_51_clean$TA, data_130_clean$TA), na.rm = TRUE),
+  max(c(data_51_clean$TA, data_130_clean$TA), na.rm = TRUE)
+)
+
 # Create plots for Station 51 ---------------------------------------------------
-pco2_51 <- create_plot(data_51_clean, "pCO2", expression(paste("pCO"[2], " (", mu, "atm)")), "grey", y_limits_pco2, show_x_axis = FALSE)
-dic_51 <- create_plot(data_51_clean, "DIC", expression(paste("DIC (", mu, "mol/kg)")), "grey", y_limits_dic, show_x_axis = FALSE)
-o2_51 <- create_plot(data_51_clean, "O2uM", expression(paste("Oxygen (", mu, "mol/L)")), "grey", y_limits_o2, show_x_axis = TRUE)
+pco2_51 <- create_plot(data_51_clean, "pCO2", expression(paste("pCO"[2], " (", mu, "atm)")), "grey", y_limits_pco2, start_time_51, end_time_51, show_x_axis = FALSE)
+dic_51 <- create_plot(data_51_clean, "DIC", expression(paste("DIC (", mu, "mol/kg)")), "grey", y_limits_dic, start_time_51, end_time_51,  show_x_axis = FALSE)
+o2_51 <- create_plot(data_51_clean, "O2uM", expression(paste("Oxygen (", mu, "mol/L)")), "grey", y_limits_o2, start_time_51, end_time_51, show_x_axis = TRUE)
+ta_51 <- create_plot(data_51_clean, "TA", expression(paste("TA (", mu, "mol/kg)")), "grey", y_limits_ta, start_time_51, end_time_51,  show_x_axis = TRUE)
 
 # Create plots for Station 130 --------------------------------------------------
-pco2_130 <- create_plot(data_130_clean, "pCO2", expression(paste("pCO"[2], " (", mu, "atm)")), "grey", y_limits_pco2, show_x_axis = FALSE)
-dic_130 <- create_plot(data_130_clean, "DIC", expression(paste("DIC (", mu, "mol/kg)")), "grey", y_limits_dic, show_x_axis = FALSE)
-o2_130 <- create_plot(data_130_clean, "O2uM", expression(paste("Oxygen (", mu, "mol/L)")), "grey", y_limits_o2, show_x_axis = TRUE)
+pco2_130 <- create_plot(data_130_clean, "pCO2", expression(paste("pCO"[2], " (", mu, "atm)")), "grey", y_limits_pco2, start_time_130, end_time_130, show_x_axis = FALSE)
+dic_130 <- create_plot(data_130_clean, "DIC", expression(paste("DIC (", mu, "mol/kg)")), "grey", y_limits_dic, start_time_130, end_time_130, show_x_axis = FALSE)
+o2_130 <- create_plot(data_130_clean, "O2uM", expression(paste("Oxygen (", mu, "mol/L)")), "grey", y_limits_o2, start_time_130, end_time_130, show_x_axis = TRUE)
+ta_130 <- create_plot(data_130_clean, "TA", expression(paste("TA (", mu, "mol/kg)")), "grey", y_limits_ta, start_time_130, end_time_130,  show_x_axis = TRUE)
 
 ## Extract the smoothers for station 130 for subsequent analysis
 extract_smoother_values <- function(plot) {
@@ -303,8 +340,8 @@ extract_smoother_values <- function(plot) {
 process_smoother_data <- function(smoother_data) {
   smoother_data_clean <- smoother_data %>%
     dplyr::select(x, y, ymin, ymax, se) %>%   # Only keep relevant columns
-    dplyr::mutate(Date.Time = as.POSIXct(x, origin = "1970-01-01", tz = "UTC")) %>%  # Convert epoch to Date.Time
-    dplyr::select(Date.Time, y, ymin, ymax, se)
+    dplyr::mutate(Date = as.POSIXct(x, origin = "1970-01-01", tz = "UTC")) %>%  # Convert epoch to Date.Time
+    dplyr::select(Date, y, ymin, ymax, se)
   return(smoother_data_clean)
 }
 
@@ -312,13 +349,22 @@ process_smoother_data <- function(smoother_data) {
 dic_smoother_130 <- extract_smoother_values(dic_130)
 o2_smoother_130 <- extract_smoother_values(o2_130)
 
-# Process smoother data for Station 130
+dic_smoother_51 <- extract_smoother_values(dic_51)
+o2_smoother_51 <- extract_smoother_values(o2_51)
+
+# Process smoother data
 dic_smoother_130_clean <- process_smoother_data(dic_smoother_130)
 o2_smoother_130_clean <- process_smoother_data(o2_smoother_130)
+
+dic_smoother_51_clean <- process_smoother_data(dic_smoother_51)
+o2_smoother_51_clean <- process_smoother_data(o2_smoother_51)
 
 # Save smoother values to CSV
 write.csv(dic_smoother_130_clean, "data/analysis/DIC_smoother_station_130.csv", row.names = FALSE)
 write.csv(o2_smoother_130_clean, "data/analysis/O2_smoother_station_130.csv", row.names = FALSE)
+
+write.csv(dic_smoother_51_clean, "data/analysis/DIC_smoother_station_51.csv", row.names = FALSE)
+write.csv(o2_smoother_51_clean, "data/analysis/O2_smoother_station_51.csv", row.names = FALSE)
 
 # Combine plots into two columns with equal heights -----------------------------
 left_column <- plot_grid(pco2_51, dic_51, o2_51, ncol = 1, align = "v", rel_heights = c(1, 1, 1))
@@ -342,11 +388,26 @@ ggsave(output_path, plot = final_plot, width = 18, height = 18, units = "cm", de
 # Display the final plot
 print(final_plot)
 
+# Combine TA plots into two columns with equal heights -----------------------------
+final_plot <- plot_grid(
+  ta_51,
+  ta_130,
+  ncol = 2,
+  labels = c("Station 51", "Station 130"),
+  label_size = 11
+)
+
+# Save the final figure as an SVG file -----------------------------------------
+output_path <- file.path(output_dir, "TA.svg")
+ggsave(output_path, plot = final_plot, width = 18, height = 6, units = "cm", device = "svg")
+
+print(final_plot)
+
 # Linear model to describe the relation ---------------------------------
 # Combine data from both stations
 combined_data <- rbind(
-  data.frame(Station = "51", Time = data_51_clean$Date.Time, DIC = data_51_clean$DIC),
-  data.frame(Station = "130", Time = data_130_clean$Date.Time, DIC = data_130_clean$DIC)
+  data.frame(Station = "51", Time = data_51_clean$Date, DIC = data_51_clean$DIC),
+  data.frame(Station = "130", Time = data_130_clean$Date, DIC = data_130_clean$DIC)
 )
 
 # Fit the model for DIC
@@ -362,18 +423,23 @@ anova(model)
 max_DIC_51 <- data_51_clean[which.max(data_51_clean$DIC), ]
 min_DIC_51 <- data_51_clean[which.min(data_51_clean$DIC), ]
 
-cat(sprintf("For station 51, the maximum DIC value is %.2f at %s\n", max_DIC_51$DIC, max_DIC_51$Date.Time))
-cat(sprintf("For station 51, the minimum DIC value is %.2f at %s\n", min_DIC_51$DIC, min_DIC_51$Date.Time))
+cat(sprintf("For station 51, the maximum DIC value is %.2f at %s\n", max_DIC_51$DIC, max_DIC_51$Date))
+cat(sprintf("For station 51, the minimum DIC value is %.2f at %s\n", min_DIC_51$DIC, min_DIC_51$Date))
 
 # Find DIC maximum and minimum for Station 130
 max_DIC_130 <- data_130_clean[which.max(data_130_clean$DIC), ]
 min_DIC_130 <- data_130_clean[which.min(data_130_clean$DIC), ]
 
-cat(sprintf("For station 130, the maximum DIC value is %.2f at %s\n", max_DIC_130$DIC, max_DIC_130$Date.Time))
-cat(sprintf("For station 130, the minimum DIC value is %.2f at %s\n", min_DIC_130$DIC, min_DIC_130$Date.Time))
+cat(sprintf("For station 130, the maximum DIC value is %.2f at %s\n", max_DIC_130$DIC, max_DIC_130$Date))
+cat(sprintf("For station 130, the minimum DIC value is %.2f at %s\n", min_DIC_130$DIC, min_DIC_130$Date))
 
 # Fit the model for O2
-model <- lm(DIC ~ Station * Time, data = combined_data)
+combined_data <- rbind(
+  data.frame(Station = "51", Time = data_51_clean$Date, O2 = data_51_clean$O2uM),
+  data.frame(Station = "130", Time = data_130_clean$Date, O2 = data_130_clean$O2uM)
+)
+
+model <- lm(O2 ~ Station * Time, data = combined_data)
 
 # Summary of the model
 summary(model)
@@ -385,15 +451,15 @@ anova(model)
 max_O2_51 <- data_51_clean[which.max(data_51_clean$O2uM), ]
 min_O2_51 <- data_51_clean[which.min(data_51_clean$O2uM), ]
 
-cat(sprintf("For station 51, the maximum O2 value is %.2f μmol/L at %s\n", max_O2_51$O2uM, max_O2_51$Date.Time))
-cat(sprintf("For station 51, the minimum O2 value is %.2f μmol/L at %s\n", min_O2_51$O2uM, min_O2_51$Date.Time))
+cat(sprintf("For station 51, the maximum O2 value is %.2f μmol/L at %s\n", max_O2_51$O2uM, max_O2_51$Date))
+cat(sprintf("For station 51, the minimum O2 value is %.2f μmol/L at %s\n", min_O2_51$O2uM, min_O2_51$Date))
 
 # Find O2 maximum and minimum for Station 130
 max_O2_130 <- data_130_clean[which.max(data_130_clean$O2uM), ]
 min_O2_130 <- data_130_clean[which.min(data_130_clean$O2uM), ]
 
-cat(sprintf("For station 130, the maximum O2 value is %.2f μmol/L at %s\n", max_O2_130$O2uM, max_O2_130$Date.Time))
-cat(sprintf("For station 130, the minimum O2 value is %.2f μmol/L at %s\n", min_O2_130$O2uM, min_O2_130$Date.Time))
+cat(sprintf("For station 130, the maximum O2 value is %.2f μmol/L at %s\n", max_O2_130$O2uM, max_O2_130$Date))
+cat(sprintf("For station 130, the minimum O2 value is %.2f μmol/L at %s\n", min_O2_130$O2uM, min_O2_130$Date))
 
 # Correlation between O2 and DIC?
 # Combine data from both stations with O2 and DIC
@@ -420,4 +486,56 @@ correlation_plot
 output_path <- file.path(output_dir, "O2_DIC_correlation.svg")
 ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "svg")
 output_path <- file.path(output_dir, "O2_DIC_correlation.png")
+ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "png")
+
+# Correlation between TA and DIC?
+# Combine data from both stations with O2 and DIC
+combined_corr_data <- rbind(
+  data.frame(Station = "51", TA = data_51_clean$TA, DIC = data_51_clean$DIC),
+  data.frame(Station = "130", TA = data_130_clean$TA, DIC = data_130_clean$DIC)
+)
+
+correlation_plot <- ggplot(combined_corr_data, aes(x = TA, y = DIC)) +
+  geom_point(alpha = 0.6, color = "grey") +
+  geom_smooth(method = "lm", se = TRUE, linetype = "dashed", color = "black") +
+  stat_cor(aes(label = paste(after_stat(r.label), after_stat(p.label), sep = "~`,`~")),
+           method = "pearson", label.x = min(combined_corr_data$TA), label.y = max(combined_corr_data$DIC), size = 4) +
+  facet_wrap(~ Station, scales = "free", labeller = labeller(Station = c("51" = "Station 51", "130" = "Station 130"))) +
+  labs(x = expression(paste("TA (", mu, "mol/L)")),
+       y = expression(paste("DIC (", mu, "mol/kg)"))) +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(size = 11, face = "bold"))
+
+correlation_plot
+
+# Save the figure as an SVG file
+output_path <- file.path(output_dir, "TA_DIC_correlation.svg")
+ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "svg")
+output_path <- file.path(output_dir, "TA_DIC_correlation.png")
+ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "png")
+
+# Correlation between TA and Salinity?
+# Combine data from both stations with O2 and DIC
+combined_corr_data <- rbind(
+  data.frame(Station = "51", TA = data_51_clean$TA, Salinity = data_51_clean$Salinity),
+  data.frame(Station = "130", TA = data_130_clean$TA, Salinity = data_130_clean$Salinity)
+)
+
+correlation_plot <- ggplot(combined_corr_data, aes(x = TA, y = Salinity)) +
+  geom_point(alpha = 0.6, color = "grey") +
+  geom_smooth(method = "lm", se = TRUE, linetype = "dashed", color = "black") +
+  stat_cor(aes(label = paste(after_stat(r.label), after_stat(p.label), sep = "~`,`~")),
+           method = "pearson", label.x = min(combined_corr_data$TA), label.y = max(combined_corr_data$Salinity), size = 4) +
+  facet_wrap(~ Station, scales = "free", labeller = labeller(Station = c("51" = "Station 51", "130" = "Station 130"))) +
+  labs(x = expression(paste("TA (", mu, "mol/L)")),
+       y = expression("Salinity (PSU)")) +
+  theme_minimal(base_size = 11) +
+  theme(strip.text = element_text(size = 11, face = "bold"))
+
+correlation_plot
+
+# Save the figure as an SVG file
+output_path <- file.path(output_dir, "TA_Salinity_correlation.svg")
+ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "svg")
+output_path <- file.path(output_dir, "TA_Salinity_correlation.png")
 ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "png")
