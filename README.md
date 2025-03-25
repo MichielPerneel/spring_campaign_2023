@@ -83,7 +83,7 @@ Now, we can run an [analysis](scripts/oxygen_light_tides.R) of the light and tid
 
 Flowcam data analysis is done [here](scripts/flowcam.ipynb). ZooScan data analysis is done [in this notebook](scripts/zooscan.ipynb).
 
-[Photophysiology](scritps/photophysiology.ipynb) analysis, using [manually extracted LabSTAF data](data/raw/LabSTAF/labstaf_csv_data_130.csv) or [automatically extracted values](scripts/labstaf_processing.R).
+[Photophysiology](scripts/photophysiology.ipynb) analysis, using [manually extracted LabSTAF data](data/raw/LabSTAF/labstaf_csv_data_130.csv) or [automatically extracted values](scripts/labstaf_processing.R).
 
 The metabolic activity of *Phaeocystis globosa* in station 130 is visualized [here]
 
