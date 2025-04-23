@@ -13,10 +13,12 @@ DIC <- read.csv('data/analysis/DIC_smoother_station_130.csv')
 O2 <- read.csv('data/analysis/O2_smoother_station_130.csv')
 meta <- read.csv('data/samples_env.csv')
 
-marker_genes <- read.csv('data/analysis/significant_markers.csv')
+marker_genes <- read.csv('data/analysis/significant_derivative_markers.csv')
 TPL <- read.csv('data/quantification/130/130_tpl.csv', check.names = FALSE)
+TPM <- read.csv('data/quantification/130/130_tpm.csv', check.names = FALSE)
 clusters <- read.csv('data/analysis/phaeocystis_O2_clusters.csv')
 phaeo_total_tpl <- read.csv('/Users/michiel/gitlab/spring_campaign_2023/data/analysis/phaeocystis_bin_tpl_130.csv')
+phaeo_total_tpm <- read.csv('/Users/michiel/gitlab/spring_campaign_2023/data/analysis/phaeocystis_bin_tpm_130.csv')
 
 # Process the DIC and O2 data
 DIC$Date <- as.POSIXct(DIC$Date)
@@ -57,25 +59,32 @@ marker_TPL <- TPL %>%
   mutate(TPL_standardized = TPL / sum(TPL, na.rm = TRUE),
          TPL_standardized_z = scale(TPL_standardized))
 
+marker_TPM <- TPM %>%
+  pivot_longer(-target_id, names_to = "sample", values_to = "TPM") %>%
+  filter(target_id %in% marker_genes$query_id) %>%
+  left_join(meta, by = c("sample" = "Station")) %>%
+  mutate(TPM_standardized = TPM / sum(TPM, na.rm = TRUE),
+         TPM_standardized_z = scale(TPM_standardized))
+
 # Separate positively and negatively correlated genes
 marker_genes <- marker_genes %>%
-  mutate(correlation = ifelse(O2_coef > 0, "Positive", "Negative"))
+  mutate(correlation = ifelse(dO2_resid_dt_coef > 0, "Positive", "Negative"))
 
 # Highlight top 3 markers for each correlation type
 top_positive_markers <- marker_genes %>%
   filter(correlation == "Positive") %>%
-  arrange(desc(O2_coef)) %>%
+  arrange(desc(dO2_resid_dt_coef)) %>%
   slice(1:3) %>%
   pull(query_id)
 
 top_negative_markers <- marker_genes %>%
   filter(correlation == "Negative") %>%
-  arrange(O2_coef) %>%
+  arrange(dO2_resid_dt_coef) %>%
   slice(1:3) %>%
   pull(query_id)
 
 # Assign colors to top markers
-positive_colors <- c("darkgreen", "forestgreen", "limegreen")
+positive_colors <- c("darkgreen", "#0d629e", "#0d9e66")
 negative_colors <- c("darkred", "firebrick", "tomato")
 
 # Assign unique colors for the top 3 markers
@@ -85,6 +94,14 @@ marker_TPL <- marker_TPL %>%
     target_id %in% top_negative_markers ~ negative_colors[match(target_id, top_negative_markers)],
     TRUE ~ "gray"
   ))
+
+marker_TPM <- marker_TPM %>%
+  mutate(color = case_when(
+    target_id %in% top_positive_markers ~ positive_colors[match(target_id, top_positive_markers)],
+    target_id %in% top_negative_markers ~ negative_colors[match(target_id, top_negative_markers)],
+    TRUE ~ "gray"
+  ))
+
 
 # Merge clusters with TPL data
 cluster_TPL <- TPL %>%
@@ -129,6 +146,27 @@ write.csv(top_representative_transcripts, output_csv, row.names = FALSE)
 ## Now we have this dataset, we can run MWU enrichment on the selected clusters
 ## using submit_cluster_MWU.pbs on the HPC
 
+# Merge clusters with TPL data
+cluster_TPM <- TPM %>%
+  pivot_longer(-target_id, names_to = "sample", values_to = "TPM") %>%
+  inner_join(clusters, by = c("target_id" = "Transcript")) %>%
+  left_join(meta, by = c("sample" = "Station")) %>%
+  mutate(TPM_standardized = TPM / sum(TPM, na.rm = TRUE),
+         TPM_standardized_z = scale(TPM_standardized))
+
+# Calculate mean trajectory for each cluster, mean trajectory is mean expression of all transcripts in cluster
+cluster_TPM_means <- cluster_TPM %>%
+  group_by(Cluster, Date) %>%
+  # Calculate mean TPM expression per cluster per sample
+  dplyr::summarize(mean_TPM = mean(TPM_standardized, na.rm=TRUE), .groups = "drop")
+
+# Add standardized log of TPL expression
+cluster_TPM <- cluster_TPM %>%
+  mutate(TPM_standardized_log = log10(TPM_standardized + 1e-6))
+
+cluster_TPM_means <- cluster_TPM_means %>%
+  mutate(mean_TPM_log = log10(mean_TPM + 1e-6))
+
 # Add metadata to phaeo tpl sums
 phaeo_total_tpl <- phaeo_total_tpl %>%
   dplyr::rename(sample = sample, phaeo_total_TPL = TPL) %>%
@@ -155,6 +193,28 @@ plot_dic_o2 <- ggplot() +
   )
 
 # Top Right Panels: Positively and Negatively Correlated Marker Genes
+plot_marker_positive_TPM <- ggplot(marker_TPM %>% filter(target_id %in% marker_genes$query_id[marker_genes$correlation == "Positive"]),
+                               aes(x = Date, y = TPM_standardized, group = target_id, color = color)) +
+  geom_point(alpha = 0.6, size = 1) +
+  geom_line(size = 1) +
+  scale_color_identity() +
+  labs(title = "Positively Correlated Marker Genes",
+       x = "Time",
+       y = "Phaeocystis TPM Fraction") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+plot_marker_negative_TPM <- ggplot(marker_TPM %>% filter(target_id %in% marker_genes$query_id[marker_genes$correlation == "Negative"]),
+                               aes(x = Date, y = TPM_standardized, group = target_id, color = color)) +
+  geom_point(alpha = 0.6, size = 1) +
+  geom_line(size = 1) +
+  scale_color_identity() +
+  labs(title = "Negatively Correlated Marker Genes",
+       x = "Time",
+       y = "Phaeocystis TPM Fraction") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 plot_marker_positive <- ggplot(marker_TPL %>% filter(target_id %in% marker_genes$query_id[marker_genes$correlation == "Positive"]),
                                aes(x = Date, y = TPL_standardized, group = target_id, color = color)) +
   geom_point(alpha = 0.6, size = 1) +
@@ -204,6 +264,26 @@ plot_clusters <- ggplot() +
   ) +
   theme_minimal(base_size = 12) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Create cluster TPM expression dynamics plot
+plot_TPM_clusters <- ggplot() +
+  geom_line(data = cluster_TPM_means, aes(x = Date, y = mean_TPM_log, group = Cluster, color = as.factor(Cluster)),
+            size = 1.2) +
+  scale_color_brewer(palette = "Set3", name = "Cluster") +
+  labs(
+    title = "Cluster Expression Dynamics",
+    x = "Time",
+    y = "Log10(avg(Standardized TPM))"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Combine the barplot and the cluster TPM expression dynamics plot
+combined_cluster_plot_TPM <- (plot_total_tpl / plot_TPM_clusters) +
+  plot_layout(heights = c(1, 3))
+# Save the plot
+ggsave("figures/metatranscriptomics/cluster_expression_TPM.svg",
+       plot = combined_cluster_plot_TPM, width = 7, height = 5)
 
 # Create an empty placeholder panel for whitespace
 empty_panel <- ggplot() + theme_void()
