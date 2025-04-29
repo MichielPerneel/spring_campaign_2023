@@ -39,10 +39,10 @@ ruleorder: bbmap_combined > combined_sample_rRNA_cleanup > trimmomatic_combined 
 # Run rules.
 rule all:
        input:
-              #expand(os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_R{num}_fastqc.html'),
-              #       sample=samples, num=[1, 2]),
-              #expand(os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_R{num}_fastqc.zip'),
-              #       sample=samples, num=[1, 2]),
+              expand(os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_R{num}_fastqc.html'),
+                     sample=samples, num=[1, 2]),
+              expand(os.path.join(config['output_dir'], 'quality_control', 'fastqc', '{sample}_R{num}_fastqc.zip'),
+                     sample=samples, num=[1, 2]),
               #os.path.join(config['output_dir'], 'quality_control', 'multiqc_data'),
               expand(os.path.join(config['output_dir'], "assembly", "rnaSPAdes", "{sample}", "transcripts.fasta"), sample=samples),
               expand(os.path.join(config['ERCC_folder'], 'ERCC92.idx')),
