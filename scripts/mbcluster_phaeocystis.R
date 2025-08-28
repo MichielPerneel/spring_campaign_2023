@@ -2,6 +2,9 @@
 if (!requireNamespace("MBCluster.Seq", quietly = TRUE)) {
     install.packages("MBCluster.Seq", repos = "http://cran.us.r-project.org")
 }
+
+library(cluster)
+library(factoextra)
 library(MBCluster.Seq)
 
 # Command-line arguments for file paths
@@ -79,20 +82,20 @@ RNASeq_data <- RNASeq.Data(
 )
 
 # Initialize clustering with K-means
-cat("Initializing clustering with K-means...\n")
-num_clusters <- 2 # Adjust the number of clusters if needed
+num_clusters <- 2
+
+# Proceed with MBCluster.Seq using selected k
+cat("Initializing MBCluster.Seq clustering with k =", num_clusters, "\n")
 kmeans_centers <- KmeansPlus.RNASeq(RNASeq_data, nK = num_clusters)$centers
 
-# Perform clustering with Cluster.RNASeq
-cat("Running MBCluster.Seq clustering...\n")
 cluster_result <- Cluster.RNASeq(
     data = RNASeq_data,
-    model = "nbinom",   # Negative binomial model
+    model = "nbinom",
     centers = kmeans_centers,
-    method = "EM"       # Expectation-Maximization algorithm
+    method = "EM"
 )
 
-# Save clustering results
+# Save final cluster assignments
 cat("Saving clustering results...\n")
 clusters <- data.frame(Transcript = RNASeq_data$GeneID, Cluster = cluster_result$cluster)
 write.csv(clusters, output_file, row.names = FALSE)
