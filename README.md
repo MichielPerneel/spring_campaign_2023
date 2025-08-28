@@ -83,9 +83,9 @@ Now, we can run an [analysis](scripts/oxygen_light_tides.R) of the light and tid
 
 Flowcam data analysis is done [here](scripts/flowcam.ipynb). ZooScan data analysis is done [in this notebook](scripts/zooscan.ipynb).
 
-[Photophysiology](scripts/photophysiology.ipynb) analysis, using [manually extracted LabSTAF data](data/raw/LabSTAF/labstaf_csv_data_130.csv) or [automatically extracted values](scripts/labstaf_processing.R).
+[Photophysiology](scripts/labSTAF.R) analysis, using manually extracted LabSTAF data or [automatically extracted values](scripts/labstaf_processing.R).
 
-The metabolic activity of *Phaeocystis globosa* in station 130 is visualized [here]
+The metabolic activity of *Phaeocystis globosa* in station 130 and 51 is visualized [here](scripts/phaeocystis_pathway_analysis.ipynb).
 
 Marker gene detection and clustering of expressed genes in high/low dissolved oxygen conditions is done in two approaches. Identifying sign. potential marker genes is done by submitting the [get_marker_transcripts.py](scripts/get_marker_transcripts.py) script to the HPC using [this submission script](scripts/submit_marker_detection.pbs). Clustering genes according to high/low dissolved oxygen conditions is done by submitting the [mbcluster_phaeocystis.R](scripts/mbcluster_phaeocystis.R) script to the HPC using [this submission script](scripts/submit_phaeo_clustering.pbs). In [this notebook](scripts/marker_gene_visualization.R) we visualize marker genes for high and low oxygen conditions. Information is extracted from the results in this [notebook](scripts/transcript_markers.ipynb). During that analysis, a correlation of the marker genes with the dissolved oxygen concentration is done, which is necessary for doing the MWU ranked tests to identify metabolic pathways that are differentially expressed in high and low oxygen conditions. If you have that file, you can run the [MWU ranked test](scripts/cluster_enrichment_MWU) to identify the metabolic pathways that are differentially expressed in high and low oxygen conditions, by submitting this [script](scripts/submit_cluster_MWU.pbs) on the HPC. MWU ranked test results are visualized in [this notebook](scripts/phaeocystis_cluster_enrichment_visualization.ipynb).
 

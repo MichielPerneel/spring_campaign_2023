@@ -1,2 +1,4 @@
 data/*
 scripts/Flowcam_export.R
+.Rproj.user
+figures/*

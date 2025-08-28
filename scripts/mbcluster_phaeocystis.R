@@ -10,11 +10,11 @@ if (length(args) < 5) {
     stop("Usage: Rscript mbcluster_phaeocystis.R <tpl_file> <annotation_file> <O2_file> <metadata_file> <output_file>")
 }
 
-tpl_file <- args[1]           # Path to the TPL data (expression counts)
-annotation_file <- args[2]    # Path to the Phaeocystis annotation file
+tpl_file <- args[1]          # Path to the TPL data (expression counts)
+annotation_file <- args[2]   # Path to the Phaeocystis annotation file
 O2_file <- args[3]           # Path to the O2 smoother file
-metadata_file <- args[4]      # Path to the sample metadata file
-output_file <- args[5]        # Output file for clustering results
+metadata_file <- args[4]     # Path to the sample metadata file
+output_file <- args[5]       # Output file for clustering results
 
 # Load expression data
 cat("Loading TPL data...\n")
@@ -79,6 +79,32 @@ RNASeq_data <- RNASeq.Data(
 )
 
 # Initialize clustering with K-means
+# Compute elbow curve (pseudo-inertia) values for different k
+cat("Computing elbow curve...\n")
+inertia_values <- numeric()
+k_values <- 1:6
+
+for (k in k_values) {
+  cat(paste("Evaluating k =", k, "\n"))
+  k_result <- KmeansPlus.RNASeq(RNASeq_data, nK = k)
+  centers <- k_result$centers
+  cluster_assignments <- k_result$cluster
+
+  # Compute sum of squared distances for each gene
+  total_ss <- 0
+  for (i in 1:nrow(RNASeq_data$Count)) {
+    gene_expr <- RNASeq_data$Count[i, ]
+    cluster_center <- centers[cluster_assignments[i], ]
+    dist_sq <- sum((gene_expr - cluster_center)^2)
+    total_ss <- total_ss + dist_sq
+  }
+  inertia_values <- c(inertia_values, total_ss)
+}
+
+# Save inertia values to CSV for downstream visualization
+elbow_df <- data.frame(k = k_values, pseudo_inertia = inertia_values)
+write.csv(elbow_df, gsub(".csv", "_elbow_curve.csv", output_file), row.names = FALSE)
+
 cat("Initializing clustering with K-means...\n")
 num_clusters <- 2 # Adjust the number of clusters if needed
 kmeans_centers <- KmeansPlus.RNASeq(RNASeq_data, nK = num_clusters)$centers
