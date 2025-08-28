@@ -7,6 +7,7 @@ library(tibble)
 library(ggfortify)
 library(stats)
 library(purrr)
+library(factoextra)
 
 # Load the data
 DIC <- read.csv('data/analysis/DIC_smoother_station_130.csv')
@@ -17,6 +18,7 @@ marker_genes <- read.csv('data/analysis/significant_derivative_markers.csv')
 TPL <- read.csv('data/quantification/130/130_tpl.csv', check.names = FALSE)
 TPM <- read.csv('data/quantification/130/130_tpm.csv', check.names = FALSE)
 clusters <- read.csv('data/analysis/phaeocystis_O2_clusters.csv')
+annotation_file <- read.csv('data/annotation/taxonomy_eukprot/130/genus_bins/Phaeocystis_transcriptome_bin.csv')
 phaeo_total_tpl <- read.csv('/Users/michiel/gitlab/spring_campaign_2023/data/analysis/phaeocystis_bin_tpl_130.csv')
 phaeo_total_tpm <- read.csv('/Users/michiel/gitlab/spring_campaign_2023/data/analysis/phaeocystis_bin_tpm_130.csv')
 
@@ -145,6 +147,33 @@ write.csv(top_representative_transcripts, output_csv, row.names = FALSE)
 
 ## Now we have this dataset, we can run MWU enrichment on the selected clusters
 ## using submit_cluster_MWU.pbs on the HPC
+
+# Plot within-cluster sum of squares to justify number of clusters that we used
+# Compute elbow curve (pseudo-inertia) values for different k
+# Transpose matrix to cluster genes (rows = genes, columns = samples)
+phaeo_transcripts <- annotation_file$query_id
+tpl_phaeo <- TPL[TPL$target_id %in% phaeo_transcripts, ]
+# Set target_id as rownames
+rownames(tpl_phaeo) <- tpl_phaeo$target_id
+tpl_phaeo <- tpl_phaeo[, -1]  # Remove target_id column
+# Turn total TPL dataframe into a named numeric vector
+tpl_totals <- setNames(phaeo_total_tpl$TPL, phaeo_total_tpl$sample)
+# Ensure column order in tpl_phaeo matches tpl_totals
+tpl_phaeo <- tpl_phaeo[, names(tpl_totals)]
+normalized_data <- sweep(tpl_phaeo, 2, tpl_totals, FUN = "/") * 1e6
+df <- as.matrix(normalized_data)
+df <- scale(df)  # Important: scale data
+# Subset top N most variable transcripts
+top_n <- 5000
+var_genes <- apply(df, 1, var)
+top_genes <- order(var_genes, decreasing = TRUE)[1:top_n]
+df <- df[top_genes, ]
+wss_plot <- fviz_nbclust(df, kmeans, method = "wss", k.max = 6, nstart = 25) +
+  labs(title = "Elbow Method for Optimal k (WSS)")
+ggsave("figures/metatranscriptomics/wss_elbow_plot.png", plot = wss_plot, width = 6, height = 4, dpi = 800)
+sil_plot <- fviz_nbclust(df, kmeans, method = "silhouette", k.max = 6, nstart = 25) +
+  labs(title = "Average Silhouette Width for Optimal k")
+ggsave("figures/metatranscriptomics/silhouette_plot.png", plot = sil_plot, width = 6, height = 4, dpi = 800)
 
 # Merge clusters with TPL data
 cluster_TPM <- TPM %>%

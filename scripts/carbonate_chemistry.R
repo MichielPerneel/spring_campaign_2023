@@ -1056,7 +1056,7 @@ plot_gamm_scaled_O2_sal <- function(data, station_name, start_time, end_time, sm
     geom_hline(yintercept = 0, linetype = "dashed") +
     scale_fill_manual(values = light_colors) +
     labs(
-      y = "Z-score", x = NULL
+      y = "Z-score\n", x = NULL
     ) +
     scale_x_datetime(
       limits = c(as.POSIXct(start_time, tz = "UTC"),
@@ -1068,7 +1068,7 @@ plot_gamm_scaled_O2_sal <- function(data, station_name, start_time, end_time, sm
           axis.ticks.x = element_blank(),
           legend.position = "none")
 
-  # ---- Bottom plot: Salinity and O₂ (Z-scored) for context ----
+  # ---- Middle plot: Salinity and O₂ (Z-scored) for context ----
   time_data_long <- data %>%
     dplyr::select(Date, O2uM, Salinity) %>%
     mutate(
@@ -1091,6 +1091,27 @@ plot_gamm_scaled_O2_sal <- function(data, station_name, start_time, end_time, sm
     scale_color_manual(values = c("O₂" = "darkgreen", "Salinity" = "#ff7f0e")) +
     scale_fill_manual(values = light_colors) +
     labs(y = "Z-score\n(mean = 0, SD = 1)", color = "", fill = NULL) +
+    labs(x = NULL) +
+    scale_x_datetime(
+      limits = c(as.POSIXct(start_time, tz = "UTC"),
+                 as.POSIXct(end_time, tz = "UTC")),
+      date_breaks = "4 hours",
+      date_labels = "%d-%b %H:%M"
+    ) +
+    theme_minimal(base_size = 10) +
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          legend.position = "none")
+
+  # ---- Bottom plot: O₂ actual data ----
+  o2_plot <- ggplot(data, aes(x = Date, y = O2uM)) +
+    geom_rect(aes(xmin = Date, xmax = lead(Date), ymin = -Inf, ymax = Inf, fill = day_moment),
+              alpha = 0.4, color = NA) +
+    geom_point(size = 1, alpha = 0.75, color = "darkgreen") +
+    geom_smooth(method = "loess", se = TRUE, span = smoother_span, color = "darkgreen") +
+    scale_fill_manual(values = light_colors) +
+    labs(y = "O2 (μmol/L)\n", x = NULL) +
+    scale_y_continuous(limits = c(260, 320)) +
     scale_x_datetime(
       limits = c(as.POSIXct(start_time, tz = "UTC"),
                  as.POSIXct(end_time, tz = "UTC")),
@@ -1104,15 +1125,16 @@ plot_gamm_scaled_O2_sal <- function(data, station_name, start_time, end_time, sm
   combined <- cowplot::plot_grid(
     res_deriv_plot,
     sal_o2_plot,
+    o2_plot,
     ncol = 1,
-    rel_heights = c(1.2, 2)
+    rel_heights = c(0.8, 1, 1)
   )
 
   final_plot <- cowplot::plot_grid(
     cowplot::ggdraw() + cowplot::draw_label(paste("Station", station_name), fontface = "bold", size = 14),
     combined,
     ncol = 1,
-    rel_heights = c(0.1, 1)
+    rel_heights = c(0.1, 1, 1)
   )
 
   return(final_plot)
@@ -1150,7 +1172,7 @@ plot_gamm_scaled_DIC_sal <- function(data, station_name, start_time, end_time, s
           axis.ticks.x = element_blank(),
           legend.position = "none")
 
-  # ---- Bottom plot: Salinity and O₂ (Z-scored) for context ----
+  # ---- Middle plot: Salinity and DIC (Z-scored) for context ----
   time_data_long <- data %>%
     dplyr::select(Date, DIC, Salinity) %>%
     mutate(
@@ -1173,6 +1195,27 @@ plot_gamm_scaled_DIC_sal <- function(data, station_name, start_time, end_time, s
     scale_color_manual(values = c("DIC" = "#0d5f9e", "-Salinity" = "#ff7f0e")) +
     scale_fill_manual(values = light_colors) +
     labs(y = "Z-score\n(mean = 0, SD = 1)", color = "", fill = NULL) +
+    theme_minimal(base_size = 10) +
+    labs(x = NULL) +
+    scale_x_datetime(
+      limits = c(as.POSIXct(start_time, tz = "UTC"),
+                 as.POSIXct(end_time, tz = "UTC")),
+      date_breaks = "4 hours",
+      date_labels = "%d-%b %H:%M"
+    ) +
+    theme(axis.text.x = element_blank(),
+          axis.ticks.x = element_blank(),
+          legend.position = "none")
+
+  # ---- Bottom plot: DIC actual data ----
+  dic_plot <- ggplot(data, aes(x = Date, y = DIC)) +
+    geom_rect(aes(xmin = Date, xmax = lead(Date), ymin = -Inf, ymax = Inf, fill = day_moment),
+              alpha = 0.4, color = NA) +
+    geom_point(size = 1, alpha = 0.75, color = "#0d5f9e") +
+    geom_smooth(method = "loess", se = TRUE, span = smoother_span, color = "#0d5f9e") +
+    scale_fill_manual(values = light_colors) +
+    labs(y = "DIC (μmol/L)\n", x = NULL) +
+    scale_y_continuous(limits = c(2100, 2400)) +
     scale_x_datetime(
       limits = c(as.POSIXct(start_time, tz = "UTC"),
                  as.POSIXct(end_time, tz = "UTC")),
@@ -1186,15 +1229,16 @@ plot_gamm_scaled_DIC_sal <- function(data, station_name, start_time, end_time, s
   combined <- cowplot::plot_grid(
     res_deriv_plot,
     sal_DIC_plot,
+    dic_plot,
     ncol = 1,
-    rel_heights = c(1.2, 2)
+    rel_heights = c(0.8, 1, 1)
   )
 
   final_plot <- cowplot::plot_grid(
     cowplot::ggdraw() + cowplot::draw_label(paste("Station", station_name), fontface = "bold", size = 14),
     combined,
     ncol = 1,
-    rel_heights = c(0.1, 1)
+    rel_heights = c(0.1, 1, 1)
   )
 
   return(final_plot)
@@ -1374,7 +1418,7 @@ output_dir <- "figures/environmental/"
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
 output_path <- file.path(output_dir, "carbonate_chemistry.svg")
-ggsave(output_path, plot = final_plot, width = 18, height = 18, units = "cm", device = "svg")
+ggsave(output_path, plot = final_plot, width = 16, height = 18, units = "cm", device = "svg")
 
 # Display the final plot
 print(final_plot)
@@ -1496,54 +1540,28 @@ ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "c
 output_path <- file.path(output_dir, "O2_DIC_correlation.png")
 ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "png")
 
-# Correlation between TA and DIC?
+# Correlation between residuals of O2 and DIC?
 # Combine data from both stations with O2 and DIC
 combined_corr_data <- rbind(
-  data.frame(Station = "51", TA = data_51_clean$TA, DIC = data_51_clean$DIC),
-  data.frame(Station = "130", TA = data_130_clean$TA, DIC = data_130_clean$DIC)
+  data.frame(Station = "51", O2 = data_51_model$resid, DIC = data_51_model_DIC$resid),
+  data.frame(Station = "130", O2 = data_130_model$resid, DIC = data_130_model_DIC$resid)
 )
 
-correlation_plot <- ggplot(combined_corr_data, aes(x = TA, y = DIC)) +
+correlation_plot <- ggplot(combined_corr_data, aes(x = O2, y = DIC)) +
   geom_point(alpha = 0.6, color = "grey") +
   geom_smooth(method = "lm", se = TRUE, linetype = "dashed", color = "black") +
   stat_cor(aes(label = paste(after_stat(r.label), after_stat(p.label), sep = "~`,`~")),
-           method = "pearson", label.x = min(combined_corr_data$TA), label.y = max(combined_corr_data$DIC), size = 4) +
+           method = "pearson", label.x = min(combined_corr_data$O2), label.y = max(combined_corr_data$DIC), size = 4) +
   facet_wrap(~ Station, scales = "free", labeller = labeller(Station = c("51" = "Station 51", "130" = "Station 130"))) +
-  labs(x = expression(paste("TA (", mu, "mol/L)")),
-       y = expression(paste("DIC (", mu, "mol/kg)"))) +
+  labs(x = expression(paste("Oxygen residuals (", mu, "mol/L)")),
+       y = expression(paste("DIC residuals (", mu, "mol/kg)"))) +
   theme_minimal(base_size = 11) +
   theme(strip.text = element_text(size = 11, face = "bold"))
 
 correlation_plot
 
 # Save the figure as an SVG file
-output_path <- file.path(output_dir, "TA_DIC_correlation.svg")
+output_path <- file.path(output_dir, "Residual_O2_DIC_correlation.svg")
 ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "svg")
-output_path <- file.path(output_dir, "TA_DIC_correlation.png")
-ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "png")
-
-# Correlation between TA and Salinity?
-# Combine data from both stations with O2 and DIC
-combined_corr_data <- rbind(
-  data.frame(Station = "51", TA = data_51_clean$TA, Salinity = data_51_clean$Salinity),
-  data.frame(Station = "130", TA = data_130_clean$TA, Salinity = data_130_clean$Salinity)
-)
-
-correlation_plot <- ggplot(combined_corr_data, aes(x = TA, y = Salinity)) +
-  geom_point(alpha = 0.6, color = "grey") +
-  geom_smooth(method = "lm", se = TRUE, linetype = "dashed", color = "black") +
-  stat_cor(aes(label = paste(after_stat(r.label), after_stat(p.label), sep = "~`,`~")),
-           method = "pearson", label.x = min(combined_corr_data$TA), label.y = max(combined_corr_data$Salinity), size = 4) +
-  facet_wrap(~ Station, scales = "free", labeller = labeller(Station = c("51" = "Station 51", "130" = "Station 130"))) +
-  labs(x = expression(paste("TA (", mu, "mol/L)")),
-       y = expression("Salinity (PSU)")) +
-  theme_minimal(base_size = 11) +
-  theme(strip.text = element_text(size = 11, face = "bold"))
-
-correlation_plot
-
-# Save the figure as an SVG file
-output_path <- file.path(output_dir, "TA_Salinity_correlation.svg")
-ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "svg")
-output_path <- file.path(output_dir, "TA_Salinity_correlation.png")
+output_path <- file.path(output_dir, "Residual_O2_DIC_correlation.png")
 ggsave(output_path, plot = correlation_plot, width = 18, height = 10, units = "cm", device = "png")

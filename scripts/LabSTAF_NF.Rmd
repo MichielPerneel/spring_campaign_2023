@@ -1,0 +1,120 @@
+---
+title: "LabSTAF"
+author: "Nerissa Fisher"
+date: "2025-04-28"
+output: html_document
+---
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(grid)
+```
+
+
+```{r}
+station_130 <- read_csv2("../data/raw/LabSTAF/all_130_NF_final.csv")
+station_51 <- read_csv2("../data/raw/LabSTAF/all_051_NF_final.csv")
+
+station_all <- bind_rows(station_130, station_51)
+# or use 'rbind.fill' to merge 2 dataframes with columns that dont fully match
+
+station_all.2 <- station_all %>%
+  group_by(station) %>%
+  mutate(nPSII = Ka * ((cFo.1 * 1e-6)/(SigmaPII * 1e-18)) * cPEC,
+         PP = GOPIIm * 12,
+         cYII.1 = 1 - (cYNPQ.1 + cYNO.1),
+         cYII.2 = 1 - (cYNPQ.2 + cYNO.2),
+         cYII.3 = 1 - (cYNPQ.3 + cYNO.3),
+         cYII.4 = 1 - (cYNPQ.4 + cYNO.4),
+         cYII.5 = 1 - (cYNPQ.5 + cYNO.5),
+         cYII.6 = 1 - (cYNPQ.6 + cYNO.6),
+         cYII.7 = 1 - (cYNPQ.7 + cYNO.7),
+         cYII.8 = 1 - (cYNPQ.8 + cYNO.8),
+         cYII.9 = 1 - (cYNPQ.9 + cYNO.9),
+         cYII.10 = 1 - (cYNPQ.10 + cYNO.10),
+         cYII.11 = 1 - (cYNPQ.11 + cYNO.11),
+         cYII.12 = 1 - (cYNPQ.12 + cYNO.12),
+         SUM.2 = cYII.2 + cYNPQ.2 + cYNO.2) %>%
+  ungroup()
+
+shading_layer <- geom_rect(
+  aes(xmin = 10, xmax = 20, ymin = -Inf, ymax = Inf),
+  fill = "gray90", alpha = 0.5,
+  inherit.aes = FALSE  # So it doesn't inherit the mapping from the main plot
+)
+
+```
+
+```{r}
+photophys_long <- station_all.2 %>%
+  pivot_longer(cols = c(Alpha, AlphaPII, Rho, SigmaPII, sig.Ek, sig.PAR_500, 'Fv/Fm', cFqFm.Ek, cFqFm.PAR_500, cNPQ.Ek, cNPQ.PAR_500, Ek,cNSV.1, cNSV.Ek, cNSV.PAR_500, cFqFm.1, cFqFm.2, JVPIIm, JVPII.Ek, JVPII.PAR_500, nPSII, PP, cYII.1),  # List all the parameters you want to plot
+               names_to = "Parameter",
+               values_to = "Value")
+
+photophys_NF <- ggplot(photophys_long, aes(x = hours, y = Value, color = as.factor(station))) +
+  shading_layer + # Add this first so it's behind the data
+  geom_point(alpha = 0.5) +
+  geom_line() +
+  facet_wrap(~ Parameter, scales = "free_y", ncol = 3, strip.position = "top") +  # One small plot per parameter
+  scale_color_manual(values = c("51" = "blue", "130" = "red")) +  # Customize colors
+  labs(x = "hours", y = "Value", color = "station") +
+  scale_x_continuous(
+    breaks = seq(0, 24, by = 2),        # Set x-axis ticks at every 2 hours
+    labels = paste0(seq(0, 24, by = 2), "h")  # Label as "0h", "2h", ..., "24h"
+  ) +
+  labs(x = "Hour of Diel Cycle", y = "Value", color = "Station") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(face = "bold"),
+    strip.background = element_rect(fill = "white"),
+    axis.title.x = element_text(),
+    axis.ticks.x = element_line(),
+    panel.spacing = unit(1, "lines")
+  )
+
+# Show the plot
+photophys_NF
+
+#ggsave(filename = "LabSTAF_NF.png", photophys_NF, device = "png", width = 14, height = 20, dpi = 300, "/Users/nfish/Google Drive/My Drive/PRIMO/Collaborations/MichielPerneel_photophys+omics MS/")
+```
+
+```{r}
+YII_long <- station_all.2 %>%
+  pivot_longer(cols = c(cYII.1:cYII.12, cYNPQ.1:cYNPQ.12, cYNO.1:cYNO.12),
+               names_to = "Parameter", values_to = "Value")
+
+# Step 1: Clean up the Parameter names to separate component and step number
+YII_long_clean <- YII_long %>%
+  separate(Parameter, into = c("Component", "Step"), sep = "\\.") %>%
+  mutate(Step = as.integer(Step)) %>%
+  mutate(Value = pmax(0, pmin(Value, 1)))
+
+# Step 2: Plot
+YIIprop.plot <- ggplot(YII_long_clean, aes(x = factor(Step), y = Value, fill = Component)) +
+  geom_bar(stat = "identity", position = "fill") +
+  facet_grid(station ~ hours) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_fill_manual(values = c("cYII" = "#1f78b4", "cYNPQ" = "#33a02c", "cYNO" = "#e31a1c")) +
+  labs(
+    x = "Light Step",
+    y = "Proportion of Quantum Yield",
+    fill = "Component"
+  ) +
+  theme_bw() +
+  theme(
+    strip.text = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Show the plot
+YIIprop.plot
+
+#ggsave(filename = "YIIprop_NF.png", YIIprop.plot, device = "png", width = 34, height = 10, dpi = 600, "/Users/nfish/Google Drive/My Drive/PRIMO/Collaborations/MichielPerneel_photophys+omics MS/")
+```
+
+
+
+
