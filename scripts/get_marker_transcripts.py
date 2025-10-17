@@ -9,13 +9,16 @@ import logging
 
 # Set up logging
 logging.basicConfig(
-    filename="data/logs/get_marker_transcripts_derivative.log",
+    filename="data/logs/get_marker_transcripts_derivative_2.log",
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
+# Standardize TPL?
+USE_STANDARDIZED_TPL = False
+
 # Function to fit GLSAR with splines for a single transcript
-def fit_glsar_with_splines(transcript_data):
+def fit_glsar_with_splines(transcript_data, tpl_column='TPL_standardized'):
     """
     Fit a GLSAR model with splines for every single transcript in a sample.
     The spline approximation is used to account for the non-linear relationship between time and TPL values.
@@ -33,7 +36,7 @@ def fit_glsar_with_splines(transcript_data):
     """
     try:
         query_id = transcript_data['query_id'].iloc[0]
-        y = transcript_data['TPL_standardized']
+        y = transcript_data[tpl_column]
         transcript_data['Time'] = (transcript_data['Date'] - transcript_data['Date'].min()).dt.total_seconds() / 3600
         splines = dmatrix("bs(Time, df=5, degree=3)", data=transcript_data, return_type='dataframe')
 
@@ -82,6 +85,7 @@ if __name__ == "__main__":
 
         # Merge transcript expression with taxonomic bin
         data = pd.merge(tpl, phaeo, left_on='target_id', right_on='query_id', how='right')
+        
         data['TPL_standardized'] = data['tpl'] / data.groupby('sample')['tpl'].transform('sum')
 
         model_data = pd.merge(data, meta, left_on='sample', right_on='Station', how='inner')
@@ -91,9 +95,11 @@ if __name__ == "__main__":
             model_data['dO2_resid_dt'] - model_data['dO2_resid_dt'].mean()
         ) / model_data['dO2_resid_dt'].std()
 
+        tpl_column = 'TPL_standardized' if USE_STANDARDIZED_TPL else 'tpl'
+        
         # Filter transcripts: at least 50% of samples have non-zero expression
         logging.info("Filtering transcripts...")
-        transcript_stats = model_data.groupby('query_id')['TPL_standardized'].agg(
+        transcript_stats = model_data.groupby('query_id')[tpl_column].agg(
             nonzero_count=lambda x: (x > 0).sum(),
             total_count='count',
         )
@@ -104,13 +110,14 @@ if __name__ == "__main__":
         model_data_filtered = model_data[model_data['query_id'].isin(filtered_transcripts)]
 
         # Group by transcript for parallel processing
-        grouped = [group for _, group in model_data_filtered.groupby('query_id')]
+        grouped = [(group, tpl_column) for _, group in model_data_filtered.groupby('query_id')]
+
         logging.info(f"Number of groups to process: {len(grouped)}")
 
         # Run GLSAR in parallel
         logging.info("Fitting GLSAR models...")
         with Pool(cpu_count()) as pool:
-            results = pool.map(fit_glsar_with_splines, grouped)
+            results = pool.starmap(fit_glsar_with_splines, grouped)
 
         # Collect and save results
         results = [res for res in results if res is not None]
@@ -123,7 +130,8 @@ if __name__ == "__main__":
             # Save significant markers
             significant_markers = results_df[results_df['dO2_resid_dt_pval_adj'] < 0.05]
             logging.info(f"Number of significant markers: {len(significant_markers)}")
-            significant_markers.to_csv('data/analysis/significant_derivative_markers.csv', index=False)
+            suffix = "standardized" if USE_STANDARDIZED_TPL else "TPL"
+            significant_markers.to_csv(f'data/analysis/significant_derivative_markers_{suffix}.csv', index=False)
         else:
             logging.warning("No valid results or p-values found.")
     except Exception as e:

@@ -32,4 +32,5 @@ fi
 
 # Initiating snakemake and running workflow in cluster mode
 snakemake --profile hpc_config/ --latency-wait 60 --use-conda --rerun-incomplete \
-    --conda-cleanup-pkgs --conda-prefix ${conda_env} --conda-frontend conda
+    --conda-cleanup-pkgs --conda-prefix ${conda_env} --conda-frontend conda \
+    --max-jobs-per-second 5

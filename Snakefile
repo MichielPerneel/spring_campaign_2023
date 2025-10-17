@@ -33,6 +33,8 @@ include: "rules/quantification.smk"
 include: "rules/spike_quantification.smk"
 include: "rules/taxonomic_annotation.smk"
 include: "rules/functional_annotation.smk"
+include: "rules/phaglo1_mapping.smk"
+include: "rules/phaglo1_annotation.smk"
 
 ruleorder: bbmap_combined > combined_sample_rRNA_cleanup > trimmomatic_combined > bbmap > sample_rRNA_cleanup > trimmomatic
 
@@ -52,4 +54,10 @@ rule all:
               expand(os.path.join(config['output_dir'], 'annotation', 'functional_eggnog', '{station}', 'functional_annotation.emapper.annotations'), station=stations),
               expand(os.path.join(config['output_dir'], 'annotation', 'taxonomy_eukprot', '{station}', 'eukprot_annotation.m8'), station=stations),
               expand(os.path.join(config['output_dir'], 'assembly', 'rnaSPAdes', '{station}', 'final_metatranscriptome.idx'), station=stations),
-              expand(os.path.join(config['output_dir'], 'quantification', '{sample}'), sample=samples)
+              expand(os.path.join(config['output_dir'], 'quantification', '{sample}'), sample=samples),
+              os.path.join(config['output_dir'], 'phaglo1_mapping', 'salmon_index', 'phaglo1_sa'),
+              expand(os.path.join(config['output_dir'], 'phaglo1_mapping', 'salmon_quant', '{sample}', 'quant.sf'), sample=samples),
+              os.path.join(config['output_dir'], 'phaglo1_mapping', 'annotation', 'tx2gene.tsv'),
+              os.path.join(config['output_dir'], 'phaglo1_mapping', 'gene_expression', 'gene_tpm.tsv'),
+              os.path.join(config['output_dir'], 'phaglo1_mapping', 'gene_expression', 'gene_numreads.tsv'),
+              os.path.join(config['output_dir'], 'phaglo1_mapping', 'annotation', 'gene_functions.tsv')

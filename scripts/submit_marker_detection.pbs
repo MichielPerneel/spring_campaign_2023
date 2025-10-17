@@ -11,6 +11,4 @@ source activate marker_transcripts
 cd $PBS_O_WORKDIR
 
 # Run the Python script
-#python scripts/get_marker_transcripts.py
-#python scripts/get_DIC_marker_transcripts.py
-python scripts/get_marker_transcripts_2.py
+python scripts/get_marker_transcripts.py
