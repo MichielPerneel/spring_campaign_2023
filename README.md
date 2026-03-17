@@ -1,8 +1,8 @@
-# Metabolic Insights into Diel Carbon Cycling and Oxygen Production during a *Phaeocystis globosa* bloom
+# Transcriptome-resolved diel metabolism of a coastal *Phaeocystis* bloom links cellular physiology to oxygen production
 
 ## Description
 
-This repository contains the code associated with the scientific manuscript titled 'Metabolic Insights into Diel Carbon Cycling and Oxygen Production during a *Phaeocystis globosa* bloom'. The study leverages a multi-disciplinary approach to unravel the complexities of a late-stage *Phaeocystis globosa* bloom in the North Sea. The study integrates biogeochemical data, metatranscriptomics, carbohydrate quantification, photophysiology, flowcam, and zooscan data to provide a comprehensive understanding of the bloom dynamics. The code provided in this repository is aimed at supplementing the manuscript by providing the necessary material to replicate the study's findings and analyses.
+This repository contains the code associated with the scientific manuscript titled 'Transcriptome-resolved diel metabolism of a coastal *Phaeocystis* bloom links cellular physiology to oxygen production'. The study leverages a multi-disciplinary approach to unravel the complexities of a late-stage *Phaeocystis globosa* bloom in the Southern North Sea. The study integrates biogeochemical data, metatranscriptomics, carbohydrate quantification, photophysiology, flowcam, and zooscan data to provide a comprehensive understanding of the bloom dynamics. The code provided in this repository supplements the manuscript by providing all the necessary steps to replicate the study's findings and analyses.
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ This repository contains the code associated with the scientific manuscript titl
 5. [License](#license)
 
 ## Introduction
-To the oceanographer, bloom situations present an opportunity to quantify the effect the blooming micro-algae have on the local biogeochemistry of the marine environment. Phaeocystis globosa is a cosmopolitan prymnesiophyte notorious for producing excessive amounts of marine gel during blooms. Short-lived P. globosa blooms heavily impact their environment, not only due to the formation of foam upon bloom termination or occasional toxin production, but also by high rates of primary production and nutrient drawdown. Through the combination of biogeochemical measurements and metatranscriptomics we are able to observe in situ O2 production and dissolved inorganic carbon (DIC) drawdown by P. globosa across a diel timeframe. Using synchronized hourly sampling, we are able to propose a set of metabolic modules and potential genetic markers whose expression closely follows biogeochemical changes. The results from this case study contribute towards describing physiological and biogeochemical rates from omics data.
+To the oceanographer, bloom situations present an opportunity to quantify the effect the blooming micro-algae have on the local biogeochemistry of the marine environment. *Phaeocystis globosa* is a cosmopolitan prymnesiophyte notorious for producing excessive amounts of marine gel during blooms. Short-lived *P. globosa* blooms heavily impact their environment, not only due to the formation of foam upon bloom termination or occasional toxin production, but also by high rates of primary production and nutrient drawdown. Through the combination of continuous biogeochemical measurements and hourly metatranscriptomics we assess the link between gene expression and in situ oxygen production and dissolved inorganic carbon (DIC) drawdown during a *P. globosa* bloom across a diel timeframe.
 
 ## Project structure
 
@@ -21,9 +21,9 @@ To the oceanographer, bloom situations present an opportunity to quantify the ef
 ├── config.yaml
 ├── data
 │   ├── analysis
-│       ├── 
+│       ├── ...
 │   └── raw
-│       ├── 
+│       ├── ...
 │
 ├── hpc_config
 │   ├── cluster.yaml
@@ -33,26 +33,18 @@ To the oceanographer, bloom situations present an opportunity to quantify the ef
 ├── samples.csv
 ├── scripts
 │   ├── TEP_analysis.ipynb
-│   ├── carbonate_chemistry.R
+│   ├── biogeochemistry.R
 │   ├── combine_runs.sh
 │   ├── environmental_analysis.ipynb
 │   ├── ERCC_normalisation.ipynb
 │   ├── flowcam.ipynb
-│   ├── get_marker_transcripts.py
 │   ├── labstaf_processing.R
 │   ├── map.R
 │   ├── mtx_taxonomy.ipynb
-│   ├── oxygen_light_tides.R
-│   ├── phaeocystis_cluster_enrichment_visualization.ipynb
 │   ├── photophysiology.ipynb
 │   ├── run_kallisto_merge.py
-│   ├── submit_cluster_MWU.pbs
-│   ├── submit_marker_detection.pbs
-│   ├── submit_phaeo_clustering.pbs
 │   ├── submit_snakemake_pbs.sh
-│   ├── transcript_markers.ipynb
-│   ├── zooscan.ipynb
-│   └── mbcluster_phaeocystis.R
+│   └── zooscan.ipynb
 └── Snakefile
 ```
 
@@ -68,34 +60,32 @@ First, data from the two repeated sequencing runs is combined dynamically with t
 8. Functional annotation of the metatranscriptome using the eggNOG database and eggnog-mapper.
 9. Quantification of the metatranscriptome using Kallisto.
 10. Quantification of the ERCC Spike-ins using Kallisto and BBMap.
+11. Mapping of the metatranscriptomic reads to the [Phaglo1 reference genome](https://phycocosm.jgi.doe.gov/Phaglo1/) using Salmon.
+12. Gathering the Phaglo1 annotations and extending them with dbCAN annotations.
 
 The resulting kallisto quantification files are merged using this [script](scripts/run_kallisto_merge.py). This generates a count.csv and tpm.csv file that are used in downstream analyses.
 
 ## Analyses
-First, the environmental data is analysed in [this notebook](scripts/environmental_analysis.ipynb). In this notebook we integrate data from the nutrient analysis, 
-tidal dynamics, data from the CTD casts, pull additional data using the [BPNSdata package](https://github.com/lifewatch/bpnsdata). Then we generate depth profiles of the CTD casts and T/S diagrams. This notebook generates the samples_env.csv file which is used in downstream analyses. A map of the sampling regions can be generated using the [map](scripts/map.R) script. 
+First, the environmental data is analysed in [this notebook](scripts/environmental_analysis.ipynb). In this notebook we integrate data from the nutrient analysis, tidal dynamics, data from the CTD casts, pull additional data using the [BPNSdata package](https://github.com/lifewatch/bpnsdata). Then we generate depth profiles of the CTD casts and T/S diagrams. This notebook generates the samples_env.csv file which is used in downstream analyses. A map of the sampling regions can be generated using the [map](scripts/map.R) script.
 
-Underway data is processed in the[ Carbonate chemistry script](scripts/carbonate_chemistry.R). This analysis extracts values from the fitted smoother functions as well, which are used downstream to relate the omics findings with the biogeochemical patterns.
+Underway data is processed in the [biogeochemistry script](scripts/biogeochemistry.R). This analysis calculates the oxygen saturation (O2') and DIC, and models and visualizes the diel patterns in these parameters.
 
-Now, we can run an [analysis](scripts/oxygen_light_tides.R) of the light and tides, producing a figure that shows how dissolved oxygen concentration (from the smoothers generated before) changes with light and tide.
+The satellite-derived chlorophyll a concentrations are obtained and visualized [here](scripts/satellite_chl_a.ipynb).
 
 [Sequencing QC and TPL calculation](scripts/ERCC_normalisation.ipynb) is done before processing the metatranscriptomic data. Relative and absolute taxonomic abundance plots are generated from the metatranscriptomic data in [this notebook](scripts/mtx_taxonomy.ipynb).
 
 Flowcam data analysis is done [here](scripts/flowcam.ipynb). ZooScan data analysis is done [in this notebook](scripts/zooscan.ipynb).
 
-[Photophysiology](scripts/labSTAF.R) analysis, using manually extracted LabSTAF data or [automatically extracted values](scripts/labstaf_processing.R).
+The general patterns in the reads mapped to the Phaglo1 reference are analysed [here](scripts/phaglo1_analysis.ipynb). This script also generates a gene x TP table. The WGCNA on cyclically varying genes is performed in this [script](scripts/phaglo1_analysis.R). This is followed by [functional enrichment analyses](scripts/wgcna_enrichment_gene_functions.ipynb) on the obtained WGCNA clusters. The overall metabolic activity of *Phaeocystis globosa*, such as expression per KOG functional category, in station 130 and 51 is visualized [here](scripts/phaeocystis_pathway_analysis.ipynb).
 
-The metabolic activity of *Phaeocystis globosa* in station 130 and 51 is visualized [here](scripts/phaeocystis_pathway_analysis.ipynb).
-
-Marker gene detection and clustering of expressed genes in high/low dissolved oxygen conditions is done in two approaches. Identifying sign. potential marker genes is done by submitting the [get_marker_transcripts.py](scripts/get_marker_transcripts.py) script to the HPC using [this submission script](scripts/submit_marker_detection.pbs). Clustering genes according to high/low dissolved oxygen conditions is done by submitting the [mbcluster_phaeocystis.R](scripts/mbcluster_phaeocystis.R) script to the HPC using [this submission script](scripts/submit_phaeo_clustering.pbs). In [this notebook](scripts/marker_gene_visualization.R) we visualize marker genes for high and low oxygen conditions. Information is extracted from the results in this [notebook](scripts/transcript_markers.ipynb). During that analysis, a correlation of the marker genes with the dissolved oxygen concentration is done, which is necessary for doing the MWU ranked tests to identify metabolic pathways that are differentially expressed in high and low oxygen conditions. If you have that file, you can run the [MWU ranked test](scripts/cluster_enrichment_MWU) to identify the metabolic pathways that are differentially expressed in high and low oxygen conditions, by submitting this [script](scripts/submit_cluster_MWU.pbs) on the HPC. MWU ranked test results are visualized in [this notebook](scripts/phaeocystis_cluster_enrichment_visualization.ipynb).
+[Photophysiology](scripts/labSTAF.R) analysis, using manually extracted LabSTAF data (all_Station_NF_final.csv) or [automatically extracted values](scripts/labstaf_processing.R). Correlations between environmental parameters, photophysiology, and gene expression are explored [here](scripts/primary_production_correlation.ipynb).
 
 TEP analysis is done [here](scripts/TEP_analysis.ipynb).
-
 
 ## License
 This code is licensed under the **Creative Commons Attribution 4.0 International (CC-BY 4.0)** license. See the [LICENSE](LICENSE) file for details.
 
 ### Citation
-If we've inspired your analysis with our project, give us a shout out! You can cite us as follows:
+If we've inspired your analysis with this project, give us a shout out! You can cite us as follows:
 
-**Perneel & Dujardin, et al. "Metabolic Insights into Diel Carbon Cycling and Oxygen Production during a *Phaeocystis globosa* bloom." [Journal Name], [2025]. DOI: [DOI]**
+Perneel & Dujardin, et al. "Transcriptome-resolved diel metabolism of a coastal *Phaeocystis* bloom links cellular physiology to oxygen production". [Journal Name], [2026]. DOI: [DOI]

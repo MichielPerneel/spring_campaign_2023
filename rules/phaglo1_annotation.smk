@@ -11,8 +11,6 @@ IPR_TAB      = config['phaglo_ipr_tab']
 KOG_TAB      = config['phaglo_kog_tab']
 SIGP_TAB     = config['phaglo_signalp_tab']
 ENABLE_DBCAN = bool(config.get('enable_dbcan', False))
-
-# (No tx2gene rule here; we depend on the one built in mapping.smk)
 TX2GENE = os.path.join(OUT, 'phaglo1_mapping', 'annotation', 'tx2gene.tsv')
 
 rule phaglo1_dbcan:
@@ -52,7 +50,6 @@ rule phaglo1_dbcan:
       --threads {threads} \
       1> "{params.outdir}/run_dbcan.stdout" 2> "{params.outdir}/run_dbcan.stderr"
 
-    # Keep downstream happy (your pipeline expects overview.txt)
     if [ -s "{params.outdir}/overview.tsv" ]; then
       cp "{params.outdir}/overview.tsv" "{output.overview}"
     else
