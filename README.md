@@ -106,10 +106,10 @@ The general patterns in the reads mapped to the Phaglo1 reference are analysed [
 
 TEP analysis is done [here](scripts/TEP_analysis.ipynb).
 
-## License
-This code is licensed under the **Creative Commons Attribution 4.0 International (CC-BY 4.0)** license. See the [LICENSE](LICENSE) file for details.
-
-### Citation
+## Citation
 If we've inspired your analysis with this project, give us a shout out! You can cite us as follows:
 
 Perneel & Dujardin, et al. "Transcriptome-resolved diel metabolism of a coastal *Phaeocystis* bloom links cellular physiology to oxygen production". [Journal Name], [2026]. DOI: [DOI]
+
+## License
+This code is licensed under the **Creative Commons Attribution 4.0 International (CC-BY 4.0)** license. See the [LICENSE](LICENSE) file for details.
