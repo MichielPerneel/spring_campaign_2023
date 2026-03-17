@@ -92,7 +92,7 @@ The resulting kallisto quantification files are merged using this [script](scrip
 ## Analyses
 First, the environmental data is analysed in [this notebook](scripts/environmental_analysis.ipynb). In this notebook we integrate data from the nutrient analysis, tidal dynamics, data from the CTD casts, pull additional data using the [BPNSdata package](https://github.com/lifewatch/bpnsdata). Then we generate depth profiles of the CTD casts and T/S diagrams. This notebook generates the samples_env.csv file which is used in downstream analyses. A map of the sampling regions can be generated using the [map](scripts/map.R) script.
 
-Underway data is processed in the [biogeochemistry script](scripts/biogeochemistry.R). This analysis calculates the oxygen saturation (O2') and DIC, and models and visualizes the diel patterns in these parameters.
+Underway data is processed in the [biogeochemistry script](scripts/biogeochemistry.r). This analysis calculates the oxygen saturation (O2') and DIC, and models and visualizes the diel patterns in these parameters.
 
 The satellite-derived chlorophyll a concentrations are obtained and visualized [here](scripts/satellite_chl_a.ipynb).
 
