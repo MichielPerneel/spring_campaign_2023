@@ -32,18 +32,30 @@ To the oceanographer, bloom situations present an opportunity to quantify the ef
 ├── figures
 ├── samples.csv
 ├── scripts
-│   ├── TEP_analysis.ipynb
+│   ├── add_resequencing_files.sh
 │   ├── biogeochemistry.R
+│   ├── build_Phaglo1_gene_function_table.py
+│   ├── build_tx2gene_from_gff.py
 │   ├── combine_runs.sh
 │   ├── environmental_analysis.ipynb
 │   ├── ERCC_normalisation.ipynb
 │   ├── flowcam.ipynb
 │   ├── labstaf_processing.R
+│   ├── labSTAF.R
 │   ├── map.R
 │   ├── mtx_taxonomy.ipynb
-│   ├── photophysiology.ipynb
+│   ├── phaeocystis_pathway_analysis.ipynb
+│   ├── phaglo1_analysis.ipynb
+│   ├── phaglo1_analysis.R
+│   ├── primary_production_correlation.ipynb
 │   ├── run_kallisto_merge.py
+│   ├── satellite_chl_a.ipynb
+│   ├── submit_merge_kallisto_pbs.sh
 │   ├── submit_snakemake_pbs.sh
+│   ├── sum_Phaglo1_transcripts_to_genes.py
+│   ├── TEP_analysis.ipynb
+│   ├── utils.py
+│   ├── wgcna_enrichment_gene_functions.ipynb
 │   └── zooscan.ipynb
 └── Snakefile
 ```
