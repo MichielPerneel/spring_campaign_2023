@@ -24,6 +24,7 @@ library(lubridate)
 library(purrr)
 library(data.table)
 library(seacarb)
+library(metR)
 library(mgcv)
 library(gratia)
 library(suncalc)
@@ -500,6 +501,125 @@ fig_validation
 ggsave("figures/environmental/DIC_validation_spot_vs_continuous.png", fig_validation,
        width = 18, height = 16, units = "cm", dpi = 800)
 
+# --------------- Explore the relationship between TA and DIC ------------------
+make_carb_grid <- function(S, T, TA_range, DIC_range, n = 120) {
+  # Make a grid of TA and DIC values, compute pH and pCO2 for each point using seacarb
+  grid <- expand.grid(
+    TA  = seq(TA_range[1], TA_range[2], length.out = n),
+    DIC = seq(DIC_range[1], DIC_range[2], length.out = n)
+  )
+
+  carb <- seacarb::carb(
+    flag = 15,
+    var1 = grid$TA * 1e-6,
+    var2 = grid$DIC * 1e-6,
+    S = S,
+    T = T,
+    P = 0,
+    Pt = PO4,
+    Sit = Sil,
+    pHscale = "T",
+    k1k2 = "l",
+    ks = "d"
+  )
+
+  grid$pH   <- carb$pH
+  grid$pCO2 <- carb$pCO2
+
+  return(grid)
+}
+
+plot_TA_DIC_anomaly <- function(df, station_name) {
+  # Compute TA and DIC anomalies, and the next time step values for trajectory arrows
+  # Plot TA vs DIC anomalies with pCO2 and pH isolines,
+  # and arrows showing the trajectory over time colored by hour of day
+  df <- df %>%
+    arrange(Date) %>%
+    mutate(
+      hour = as.numeric(format(Date, "%H")) + as.numeric(format(Date, "%M")) / 60,
+
+      DIC_anom = DIC - mean(DIC, na.rm = TRUE),
+      TA_anom  = TA  - mean(TA,  na.rm = TRUE),
+
+      DIC_next = lead(DIC_anom),
+      TA_next  = lead(TA_anom)
+    )
+
+  S_mean <- mean(df$Salinity, na.rm = TRUE)
+  T_mean <- mean(df$Temp, na.rm = TRUE)
+
+  TA_range  <- range(df$TA,  na.rm = TRUE)
+  DIC_range <- range(df$DIC, na.rm = TRUE)
+
+  grid <- make_carb_grid(S_mean, T_mean, TA_range, DIC_range) %>%
+    mutate(
+      DIC_anom = DIC - mean(df$DIC, na.rm = TRUE),
+      TA_anom  = TA  - mean(df$TA,  na.rm = TRUE)
+    )
+
+  # Plot
+  p <- ggplot() +
+    # ---- pCO2 isolines ----
+    geom_contour(
+      data = grid, aes(x = DIC_anom, y = TA_anom, z = pCO2),
+      breaks = seq(200, 1000, by = 100), color = "grey", linewidth = 0.4) +
+
+    # ---- pH isolines ----
+    geom_contour(
+      data = grid, aes(x = DIC_anom, y = TA_anom, z = pH),
+      breaks = seq(7.6, 8.4, by = 0.1), linetype = "dashed", color = "black", linewidth = 0.4) +
+
+    # ---- labels ----
+    geom_text_contour(
+      data = grid, aes(x = DIC_anom, y = TA_anom, z = pCO2),
+      breaks = seq(200, 1000, by = 100), size = 3, color = "grey") +
+
+    geom_text_contour(
+      data = grid, aes(x = DIC_anom, y = TA_anom, z = pH),
+      breaks = seq(7.6, 8.4, by = 0.1), size = 3, color = "black") +
+
+    # ---- trajectory arrows ----
+    geom_segment(
+      data = df %>% filter(!is.na(DIC_next)),
+      aes(x = DIC_anom, y = TA_anom, xend = DIC_next, yend = TA_next, color = hour),
+      arrow = arrow(length = unit(0.18, "cm")), linewidth = 0.6) +
+
+    # ---- points ----
+    geom_point(
+      data = df, aes(x = DIC_anom, y = TA_anom, color = hour), size = 1) +
+
+    # ---- color scale ----
+    scale_color_viridis_c(
+      option = "plasma", name = "Hour of day", breaks = seq(0, 24, by = 3)) +
+
+    labs(
+      title = paste("Station", station_name),
+      x = expression(Delta~DIC~"("*mu*"mol kg"^{-1}*")"),
+      y = expression(Delta~TA~"("*mu*"mol kg"^{-1}*")")
+    ) +
+
+    theme_minimal(base_size = 11)
+
+  return(p)
+}
+
+p51  <- plot_TA_DIC_anomaly(data_51_clean,  "51")
+# Remove legend from p51 to avoid duplication in the combined plot
+p51 <- p51 + theme(legend.position = "none")
+p130 <- plot_TA_DIC_anomaly(data_130_clean, "130")
+
+final_plot <- p51 | p130
+final_plot
+
+ggsave(
+  "figures/environmental/TA_DIC_anomaly.png",
+  final_plot,
+  width = 22,
+  height = 14,
+  units = "cm",
+  dpi = 1000
+)
+
 # ----- O2 comparison between stations -----------------------------------------
 # Compute mean, SD, n per station
 o2_stats <- tibble(
@@ -790,9 +910,9 @@ data_130_model$day_moment     <- data_130_clean$day_moment
 
 # ---- Model grids -----------------------------------------------------
 model_grid <- list(
-  minimal = ~ s(Salinity_scaled, k = 20, bs = "cs"),
-  full    = ~ s(Salinity_scaled, k = 20, bs = "cs") +
-              s(Wind_scaled, k = 20, bs = "cs")
+  minimal = ~ s(Salinity_scaled, k = 15, bs = "cs"),
+  full    = ~ s(Salinity_scaled, k = 15, bs = "cs") +
+              s(Wind_scaled, k = 15, bs = "cs")
 )
 
 # ---- Time-block CV folds per response ----------------------------------
@@ -829,6 +949,12 @@ final_51_O2   <- grid_51_O2 [[best_51_O2]]$model
 final_51_DIC  <- grid_51_DIC[[best_51_DIC]]$model
 final_130_O2  <- grid_130_O2[[best_130_O2]]$model
 final_130_DIC <- grid_130_DIC[[best_130_DIC]]$model
+
+# Check autocorrelation in the models
+acf(residuals(final_51_O2$lme), na.action = na.omit, main = "ACF of residuals - Station 51 O2'")
+acf(residuals(final_51_DIC$lme), na.action = na.omit, main = "ACF of residuals - Station 51 DIC")
+acf(residuals(final_130_O2$lme), na.action = na.omit, main = "ACF of residuals - Station 130 O2'")
+acf(residuals(final_130_DIC$lme), na.action = na.omit, main = "ACF of residuals - Station 130 DIC")
 
 # ---- Predictions, residuals, derivatives -------------------------------------
 augment_block <- function(dat, model, resp, label) {
