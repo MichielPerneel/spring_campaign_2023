@@ -2,3 +2,7 @@ data/*
 scripts/Flowcam_export.R
 .Rproj.user
 figures/*
+.DS_Store
+.RData
+.Rhistory
+spring_campaign_2023.Rproj
