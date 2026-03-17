@@ -31,6 +31,18 @@ To the oceanographer, bloom situations present an opportunity to quantify the ef
 ├── README.md
 ├── figures
 ├── samples.csv
+├── rules
+│   ├── quality_control.smk
+│   ├── preprocessing.smk
+│   ├── assembly.smk
+│   ├── cluster_assemblies.smk
+│   ├── protein_prediction.smk
+│   ├── quantification.smk
+│   ├── spike_quantification.smk
+│   ├── taxonomic_annotation.smk
+│   ├── functional_annotation.smk
+│   ├── phaglo1_mapping.smk
+│   └── phaglo1_annotation.smk
 ├── scripts
 │   ├── add_resequencing_files.sh
 │   ├── biogeochemistry.R
