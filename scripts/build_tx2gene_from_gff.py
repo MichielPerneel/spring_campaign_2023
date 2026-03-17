@@ -1,7 +1,7 @@
 # scripts/build_tx2gene_from_gff.py
 # Purpose:
 #   Parse a JGI GFF3 (Phaglo1 GeneCatalog) and build a transcript->gene mapping table.
-#   We keep it robust and informative:
+#   Try to keep it robust and informative:
 #     - Primary columns used by the workflow: transcript_id, gene_id
 #     - Extra helpful columns (if present in the GFF attributes): transcript_num_id, gene_num_id, protein_id, transcript_name, gene_name
 #
@@ -17,10 +17,10 @@
 #      gene_name         = "jgi.p|Phaglo1|1"
 #
 # Notes:
-#   - We treat features with type 'mRNA' or 'transcript' as transcripts.
-#   - We prefer attributes['ID'] for the transcript_id and attributes['Parent'] for the gene_id,
+#   - Features with type 'mRNA' or 'transcript' are treated s transcripts.
+#   - Attributes['ID'] are preferred for the transcript_id and attributes['Parent'] for the gene_id,
 #     because those are the canonical GFF links.
-#   - We also capture numeric IDs (e.g., 'transcriptId=1') because JGI FASTA headers sometimes
+#   - Numeric IDs (e.g., 'transcriptId=1') are also captured because JGI FASTA headers sometimes
 #     reference those; having them in the table can help if we need to reconcile later.
 #
 # Inputs (from Snakemake):
@@ -31,14 +31,14 @@
 # The output is tab-delimited with at least:
 #   transcript_id  gene_id
 # and may include extra columns if present.
-# The script is meant to be run as part of the snakemake workflow.
+# The script is run as part of the snakemake workflow.
 
 import os
 import gzip
 
 import pandas as pd
 
-# ---- Get IO from Snakemake (Snakemake injects `snakemake` in the script namespace) ----
+# ---- Get IO from Snakemake  ----
 gff_path = snakemake.input[0]
 out_path = snakemake.output[0]
 
