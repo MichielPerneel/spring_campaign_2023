@@ -251,10 +251,11 @@ run_wgcna_on_sig <- function(expr_station, sig_table,
 # ===========================
 # =========== RUN ===========
 # ===========================
-expr <- read_csv("data/phaglo1_mapping/gene_expression/phaeo_long_tpm.csv", show_col_types=FALSE) %>%
+expr <- read_csv("data/phaglo1_mapping/gene_expression/phaeo_long_tpm_tpl.csv", show_col_types=FALSE) %>%
   mutate(Date=ymd_hms(Date),
          time_of_day_hours=as.numeric(time_of_day_hours),
-         TPM=as.numeric(TPM))
+         TPM=as.numeric(TPM),
+         TPL=as.numeric(TPL))
 
 # Station 130 (bloom)
 expr_130 <- expr %>% filter(Station=="130")

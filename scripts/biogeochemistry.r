@@ -1390,8 +1390,8 @@ print(sens_51)
 sens_130 <- sens_table(grid_130_O2, grid_130_DIC, data_130_model, data_130_model, "130")
 print(sens_130)
 
-phi_51_O2  <- coef(grid_51_O2[[sym_51]]$model$lme$modelStruct$corStruct, unconstrained = FALSE)
-phi_130_O2 <- coef(grid_130_O2[[sym_130]]$model$lme$modelStruct$corStruct, unconstrained = FALSE)
+phi_51_O2  <- coef(grid_51_O2[[best_51_O2]]$model$lme$modelStruct$corStruct, unconstrained = FALSE)
+phi_130_O2 <- coef(grid_130_O2[[best_130_O2]]$model$lme$modelStruct$corStruct, unconstrained = FALSE)
 cat("Estimated Φ (AR1) values: Station 51 =", phi_51_O2, ", Station 130 =", phi_130_O2, "\n")
 
 # Print out the Φ AR1 for all models to check if they are similar across models
@@ -1407,14 +1407,14 @@ summ_line <- function(st, var, rhs, AIC, CV) sprintf(
   "Station %s %s: RHS = %s | AIC = %.1f | CV-RMSE = %.3f",
   st, var, rhs, AIC, CV
 )
-cat(summ_line("51","O2",  sym_51,
-              grid_51_O2[[sym_51]]$AIC,  grid_51_O2[[sym_51]]$cv_rmse), "\n")
-cat(summ_line("51","DIC", sym_51,
-              grid_51_DIC[[sym_51]]$AIC, grid_51_DIC[[sym_51]]$cv_rmse), "\n")
-cat(summ_line("130","O2",  sym_130,
-              grid_130_O2[[sym_130]]$AIC,  grid_130_O2[[sym_130]]$cv_rmse), "\n")
-cat(summ_line("130","DIC", sym_130,
-              grid_130_DIC[[sym_130]]$AIC, grid_130_DIC[[sym_130]]$cv_rmse), "\n")
+cat(summ_line("51","O2",  best_51_O2,
+              grid_51_O2[[best_51_O2]]$AIC,  grid_51_O2[[best_51_O2]]$cv_rmse), "\n")
+cat(summ_line("51","DIC", best_51_DIC,
+              grid_51_DIC[[best_51_DIC]]$AIC, grid_51_DIC[[best_51_DIC]]$cv_rmse), "\n")
+cat(summ_line("130","O2",  best_130_O2,
+              grid_130_O2[[best_130_O2]]$AIC,  grid_130_O2[[best_130_O2]]$cv_rmse), "\n")
+cat(summ_line("130","DIC", best_130_DIC,
+              grid_130_DIC[[best_130_DIC]]$AIC, grid_130_DIC[[best_130_DIC]]$cv_rmse), "\n")
 
 fmt_vp <- function(vp) sprintf("abiotic_fraction=%.3f, resid_fraction=%.3f",
                                vp$abiotic_fraction, vp$resid_fraction)
@@ -1430,11 +1430,6 @@ cat('Station 130 GAM check')
 gam.check(final_130_O2$gam)
 gam.check(final_130_DIC$gam)
 
-cat(sprintf("Station 51 residual stoichiometry: slope = %.3f (SE=%.3f, p=%s), r=%.3f, n=%d\n",
-            stoich_51$slope, stoich_51$slope_se, signif(stoich_51$p_value,3), stoich_51$cor_resid, stoich_51$n))
-cat(sprintf("Station 130 residual stoichiometry: slope = %.3f (SE=%.3f, p=%s), r=%.3f, n=%d\n",
-            stoich_130$slope, stoich_130$slope_se, signif(stoich_130$p_value,3), stoich_130$cor_resid, stoich_130$n))
-
 # Combine both stations and export the O2' anomaly data and residuals for downstream analysis
 data_export <- bind_rows(
   data_51_model %>%
@@ -1447,7 +1442,7 @@ data_export <- bind_rows(
     mutate(Station = "130")
 ) %>%
   relocate(Station, .before = Date)
-write_csv(data_export, "data/analysis/O2prime_resids.csv")
+write_csv(data_export, "data/analysis/O2prime.csv")
 
 # Plot correlation between O2' and DIC, and O2' residuals and DIC residuals
 data_export$Station <- factor(data_export$Station, levels = c("51", "130"))
