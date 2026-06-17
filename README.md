@@ -1,8 +1,8 @@
-# Transcriptome-resolved diel metabolism of a coastal *Phaeocystis* bloom links cellular physiology to oxygen production
+# Transcriptome-resolved diel metabolism of a coastal *Phaeocystis* bloom links cellular physiology to oxygen cycling
 
 ## Description
 
-This repository contains the code associated with the scientific manuscript titled 'Transcriptome-resolved diel metabolism of a coastal *Phaeocystis* bloom links cellular physiology to oxygen production'. The study leverages a multi-disciplinary approach to unravel the complexities of a late-stage *Phaeocystis globosa* bloom in the Southern North Sea. The study integrates biogeochemical data, metatranscriptomics, carbohydrate quantification, photophysiology, flowcam, and zooscan data to provide a comprehensive understanding of the bloom dynamics. The code provided in this repository supplements the manuscript by providing all the necessary steps to replicate the study's findings and analyses.
+This repository contains the code associated with the scientific manuscript titled 'Transcriptome-resolved diel metabolism of a coastal *Phaeocystis* bloom links cellular physiology to oxygen cycling'. The study leverages a multi-disciplinary approach to unravel the complexities of a late-stage *Phaeocystis globosa* bloom in the Southern North Sea. The study integrates biogeochemical data, metatranscriptomics, carbohydrate quantification, photophysiology, flowcam, and zooscan data to provide a comprehensive understanding of the bloom dynamics. The code provided in this repository supplements the manuscript by providing all the necessary steps to replicate the study's findings and analyses.
 
 ## Table of Contents
 
@@ -13,7 +13,7 @@ This repository contains the code associated with the scientific manuscript titl
 5. [License](#license)
 
 ## Introduction
-To the oceanographer, bloom situations present an opportunity to quantify the effect the blooming micro-algae have on the local biogeochemistry of the marine environment. *Phaeocystis globosa* is a cosmopolitan prymnesiophyte notorious for producing excessive amounts of marine gel during blooms. Short-lived *P. globosa* blooms heavily impact their environment, not only due to the formation of foam upon bloom termination or occasional toxin production, but also by high rates of primary production and nutrient drawdown. Through the combination of continuous biogeochemical measurements and hourly metatranscriptomics we assess the link between gene expression and in situ oxygen production and dissolved inorganic carbon (DIC) drawdown during a *P. globosa* bloom across a diel timeframe.
+To the oceanographer, bloom situations present an opportunity to quantify the effect the blooming micro-algae have on the local biogeochemistry of the marine environment. *Phaeocystis globosa* is a cosmopolitan prymnesiophyte notorious for producing excessive amounts of marine gel during blooms. Short-lived *P. globosa* blooms heavily impact their environment, not only due to the formation of foam upon bloom termination or occasional toxin production, but also by high rates of primary production and nutrient drawdown. Through the combination of continuous biogeochemical measurements and hourly metatranscriptomics we assess the link between gene expression and in situ oxygen cycling and dissolved inorganic carbon (DIC) drawdown during a *P. globosa* bloom across a diel timeframe.
 
 ## Project structure
 
